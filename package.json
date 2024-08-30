@@ -1,7 +1,8 @@
 {
   "name": "@leanmind/monads-ts",
   "version": "1.0.0",
-  "description": "",
+  "description": "A collection of monads implemented in TypeScript using object-oriented programming.",
+  "keywords": ["functional-programming", "monads", "typescript", "oop"],
   "main": "index.js",
   "scripts": {
     "analize": "npm run lint:fix && npm run compile",

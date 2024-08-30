@@ -1,10 +1,11 @@
 {
-  "name": "Boilerplate typescript",
+  "name": "@leanmind/monads-ts",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
   "scripts": {
     "analize": "npm run lint:fix && npm run compile",
+    "build": "npm run lint:fix && tsc",
     "compile": "tsc --noEmit",
     "compile:watch": "npm run compile -- --watch",
     "compile:build": "tsc -b",
@@ -15,7 +16,11 @@
     "format:fix": "npm run format -- --write",
     "test": "vitest run"
   },
-  "author": "Mario S. Pinto Miranda",
+  "author": "@leanmind/Mario S. Pinto Miranda",
+  "repository": "github:lean-mind/monads-ts",
+  "bugs": {
+    "url": "https://github.com/lean-mind/monads-ts/issues"
+  },
   "license": "MIT",
   "devDependencies": {
     "@types/node": "^20.12.7",

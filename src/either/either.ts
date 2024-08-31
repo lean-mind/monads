@@ -10,7 +10,7 @@ abstract class Either<L, R> {
   abstract mapLeft<T>(f: (l: L) => T): Either<T, R>;
   abstract flatMap<T>(f: (r: R) => Either<L, T>): Either<L, T>;
   abstract flatMapLeft<T>(f: (l: L) => Either<T, R>): Either<T, R>;
-  abstract match<T>(fl: (l: L) => T, fr: (r: R) => T): T;
+  abstract match<E, S>(fl: (l: L) => E, fr: (r: R) => S): E | S;
   abstract isLeft(): this is Left<L, R>;
   abstract isRight(): this is Right<L, R>;
 }
@@ -32,7 +32,7 @@ class Left<L, R> extends Either<L, R> {
     return new Left(this.value);
   }
 
-  match<T>(fl: (error: L) => T, _: (r: R) => T): T {
+  match<E, S>(fl: (l: L) => E, fr: (r: R) => S): E | S {
     return fl(this.value);
   }
 
@@ -66,7 +66,7 @@ class Right<L, R> extends Either<L, R> {
     return f(this.value);
   }
 
-  match<T>(_: (l: L) => T, fr: (r: R) => T): T {
+  match<E, S>(fl: (l: L) => E, fr: (r: R) => S): E | S {
     return fr(this.value);
   }
 

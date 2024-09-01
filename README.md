@@ -4,10 +4,10 @@ This is a set of implementations of monads in TypeScript with OOP perspective.
 It is a work in progress and the first monad implemented is the Either monad.
 
 ## Either Monad
-The Either monad represents a value of one of two possible types (a disjoint union).
-An Either is either a Left or a Right. 
-By convention, Right is used to hold a successful value, 
-while Left is used to hold an error or failure.
+The `Either` monad represents a value of one of two possible types (a disjoint union).
+An `Either` is either a `Left` or a `Right`. 
+By convention, `Right` is used to hold a successful value, 
+while `Left` is used to hold an error or failure.
 
 ### Usage
 #### Creating an Either
@@ -22,6 +22,24 @@ const right = Either.right(42);
 // Creating a Left
 const left = Either.left('Error');
 ```
+
+#### Creating Either from possible failed operations
+
+You can create an `Either` from a failed operations using the static method `Either.catch`.
+```typescript
+import { Either } from 'monads-ts';
+
+const findUser = (id: number): User => {
+  if (id === 42) {
+    return { id: 42, name: 'John Doe' };
+  }
+  throw new Error('User with id ${id} not found');
+};
+  
+const right = Either.catch<User>(() => findUser(42)); // Right({ id: 42, name: 'John Doe' })
+const left = Either.catch<User>(() => findUser(1)); // Left(Error('User with id 1 not found'))
+```
+
 #### Mapping over an Either
 
 You can use the `flatMap` method to transform the value inside a `Right`, and `flatMapLeft` to transform the value inside a `Left`.

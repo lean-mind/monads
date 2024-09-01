@@ -3,6 +3,18 @@ import { Either } from './either';
 
 describe('Either monad', () => {
   it.each([
+    { type: 'Right', execute: () => 2, expected: Either.right(2) },
+    {
+      type: 'Left',
+      execute: () => {
+        throw new Error('Error');
+      },
+      expected: Either.left(new Error('Error')),
+    },
+  ])('$type should be created from possible failed action', ({ execute, expected }) => {
+    expect(Either.catch(execute)).toEqual(expected);
+  });
+  it.each([
     { type: 'Right', either: Either.right(2), closure: (x: number) => x, expected: Either.right(2) },
     { type: 'Left', either: Either.left(2), closure: (x: number) => x * 2, expected: Either.left(2) },
   ])('$type should handle map operation correctly', ({ either, closure, expected }) => {

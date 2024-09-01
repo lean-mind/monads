@@ -2,16 +2,31 @@ abstract class Either<L, R> {
   static right<T>(value: T): Either<never, T> {
     return new Right(value);
   }
+
   static left<T>(value: T): Either<T, never> {
     return new Left(value);
   }
 
+  static catch<T>(execute: () => T): Either<Error, T> {
+    try {
+      return Either.right(execute());
+    } catch (error) {
+      return Either.left(error);
+    }
+  }
+
   abstract map<T>(f: (r: R) => T): Either<L, T>;
+
   abstract mapLeft<T>(f: (l: L) => T): Either<T, R>;
+
   abstract flatMap<T>(f: (r: R) => Either<L, T>): Either<L, T>;
+
   abstract flatMapLeft<T>(f: (l: L) => Either<T, R>): Either<T, R>;
+
   abstract match<E, S>(fl: (l: L) => E, fr: (r: R) => S): E | S;
+
   abstract isLeft(): this is Left<L, R>;
+
   abstract isRight(): this is Right<L, R>;
 }
 

@@ -4,10 +4,9 @@
     "lib": [
       "es6"
     ],
+    "declaration": true,
     "module": "commonjs",
-    "moduleResolution": "node",
     "noImplicitAny": true,
-    "sourceMap": true,
     "strict": true,
     "outDir": "./dist/"
   },

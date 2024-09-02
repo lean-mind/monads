@@ -47,11 +47,14 @@ describe('Either monad', () => {
   });
 
   it.each([
-    { type: 'Right', either: Either.right(2), expected: 2 },
+    { type: 'Right', either: Either.right(2), expected: '2' },
     { type: 'Left', either: Either.left('Error'), expected: 'Error' },
   ])('$type should handle match operation correctly', ({ either, expected }) => {
     expect(
-      either.match((x) => x, (x) => x)
+      either.match(
+        (x) => x,
+        (x) => x.toString()
+      )
     ).toEqual(expected);
   });
 

@@ -11,7 +11,7 @@ abstract class Either<L, R> {
     try {
       return Either.right(execute());
     } catch (error) {
-      return Either.left(error);
+      return error instanceof Error ? Either.left(error) : Either.left(new Error('Unknown error'));
     }
   }
 

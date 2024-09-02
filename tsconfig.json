@@ -8,14 +8,16 @@
     "module": "commonjs",
     "noImplicitAny": true,
     "strict": true,
-    "outDir": "./dist/"
+    "rootDir": "src",
+    "outDir": "dist"
   },
   "include": [
-    "src/**/*"
+    "src/**/*.ts"
   ],
   "exclude": [
     "node_modules",
     "**/*.spec.ts",
-    "**/*.test.ts"
-  ]
+    "**/*.test.ts",
+    "dist"
+    ]
 }

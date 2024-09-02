@@ -51,10 +51,7 @@ describe('Either monad', () => {
     { type: 'Left', either: Either.left('Error'), expected: 'Error' },
   ])('$type should handle match operation correctly', ({ either, expected }) => {
     expect(
-      either.match(
-        (x) => x,
-        (x) => x
-      )
+      either.match((x) => x, (x) => x)
     ).toEqual(expected);
   });
 
@@ -66,9 +63,12 @@ describe('Either monad', () => {
       fl: (x: number) => x.toString(),
       expected: 2,
     },
-  ])('Either $type can handle closures to unwrap distinct types of results', ({ either, expected, fr, fl }) => {
-    expect(either.match(fl, fr)).toEqual(expected);
-  });
+  ])(
+    'Either $type can handle closures to unwrap distinct types of results by algebraic types',
+    ({ either, expected, fr, fl }) => {
+      expect(either.match<string | number>(fl, fr)).toEqual(expected);
+    }
+  );
 
   it.each([
     {

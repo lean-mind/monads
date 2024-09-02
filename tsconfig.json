@@ -5,15 +5,17 @@
         "moduleResolution": "node",
         "jsx": "react",
         "noImplicitAny": false,
-        "sourceMap": true, 
-        "outDir":"./dist/"
+        "sourceMap": true,
+        "rootDir": "src",
+        "outDir":"dist"
     },
     "include": [
-        "src/**/*"
+        "src/**/*.ts"
     ],
     "exclude": [
         "node_modules",
         "**/*.spec.ts",
-        "**/*.test.ts"
+        "**/*.test.ts",
+        "dist"
     ]
 }

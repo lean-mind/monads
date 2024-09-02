@@ -1,6 +1,6 @@
 {
   "name": "@leanmind/monads-ts",
-  "version": "1.0.2",
+  "version": "0.0.0-development",
   "description": "A collection of monads implemented in TypeScript using object-oriented programming.",
   "keywords": [
     "functional-programming",
@@ -20,7 +20,8 @@
     "lint:fix": "npm run lint -- --fix",
     "format": "prettier --config .prettierrc '**/*.+(ts|tsx)'",
     "format:fix": "npm run format -- --write",
-    "test": "vitest run"
+    "test": "vitest run",
+    "semantic-release": "semantic-release"
   },
   "author": "@leanmind/Mario S. Pinto Miranda",
   "repository": "github:lean-mind/monads-ts",
@@ -56,5 +57,13 @@
       "npm run compile",
       "git add . "
     ]
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "publishConfig": {
+    "access": "public"
   }
 }

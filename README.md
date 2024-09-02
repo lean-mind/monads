@@ -56,12 +56,12 @@ You can use the `match` method to handle both `Right` and `Left` cases and unwra
 ```typescript
 const sucess = Either.right(42).match(
   err => `Error: ${err}`,
-  x => x + 1
-); // 43
+  x => (x + 1).toString()
+); // '43'
 
 const error = Either.left('Error').match(
   err => `Error: ${err}`,
-  x => x + 1,
+  x => (x + 1).toString(),
 ); // 'Error: Error'
 ```
 
@@ -90,7 +90,7 @@ The following example demonstrates how to chain operations using the map method:
 const result = Either.right(42)
   .map(x => x + 1)
   .map(x => x * 2)
-  .match(
+  .match<string|number>(
     err => `Error: ${err}`,
     x => x
   );

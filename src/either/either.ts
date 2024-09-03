@@ -1,10 +1,20 @@
-abstract class Either<L, R> {
+import { Monad } from '../monad';
+import { Matchable } from '../match';
+
+abstract class Either<L, R> implements Monad<R>, Matchable<R, L> {
   static right<T>(value: T): Either<never, T> {
     return new Right(value);
   }
 
   static left<T>(value: T): Either<T, never> {
     return new Left(value);
+  }
+
+  static from<L, R>(matchable: Matchable<R, L>): Either<L, R> {
+    return matchable.match<Either<L, R>>(
+      (value: R) => Either.right(value),
+      (value: L) => Either.left(value)
+    );
   }
 
   static catch<T>(execute: () => T): Either<Error, T> {
@@ -23,7 +33,7 @@ abstract class Either<L, R> {
 
   abstract flatMapLeft<T>(f: (l: L) => Either<T, R>): Either<T, R>;
 
-  abstract match<T>(fl: (l: L) => T, fr: (r: R) => T): T;
+  abstract match<T>(ifRight: (r: R) => T, ifLeft: (l: L) => T): T;
 
   abstract isLeft(): this is Left<L, R>;
 
@@ -43,12 +53,12 @@ class Left<L, R> extends Either<L, R> {
     return new Left(f(this.value));
   }
 
-  flatMap<T>(_: (r: R) => Either<L, T>): Either<L, T> {
+  flatMap<T>(_: (r: never) => Either<L, T>): Either<L, T> {
     return new Left(this.value);
   }
 
-  match<T>(fl: (l: L) => T, fr: (r: R) => T): T {
-    return fl(this.value);
+  match<T>(_: (_: never) => never, ifLeft: (l: L) => T): T {
+    return ifLeft(this.value);
   }
 
   isLeft(): this is Left<L, R> {
@@ -81,8 +91,8 @@ class Right<L, R> extends Either<L, R> {
     return f(this.value);
   }
 
-  match<T>(fl: (l: L) => T, fr: (r: R) => T): T {
-    return fr(this.value);
+  match<T>(ifRight: (r: R) => T, _: (_: never) => never): T {
+    return ifRight(this.value);
   }
 
   isLeft(): this is Left<L, R> {
@@ -93,7 +103,7 @@ class Right<L, R> extends Either<L, R> {
     return true;
   }
 
-  flatMapLeft<T>(f: (l: L) => Either<T, R>): Either<T, R> {
+  flatMapLeft<T>(_: (l: never) => Either<T, R>): Either<T, R> {
     return new Right(this.value);
   }
 }

@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { Either } from './either';
+import { Either, Right } from './either';
+import { Option } from '../option';
 
 describe('Either monad', () => {
   it.each([
@@ -14,6 +15,19 @@ describe('Either monad', () => {
   ])('$type should be created from possible failed action', ({ execute, expected }) => {
     expect(Either.catch(execute)).toEqual(expected);
   });
+
+  it.each([
+    { typeMatchable: 'Some', eitherType: 'Right', matchable: Option.of(2), expected: Either.right(2) },
+    {
+      typeMatchable: 'None',
+      eitherType: 'Left',
+      matchable: Option.of<number>(undefined),
+      expected: Either.left(undefined),
+    },
+  ])('$eitherType should be created from $typeMatchable', ({ matchable, expected }) => {
+    expect(Either.from(matchable)).toEqual(expected);
+  });
+
   it.each([
     { type: 'Right', either: Either.right(2), closure: (x: number) => x, expected: Either.right(2) },
     { type: 'Left', either: Either.left(2), closure: (x: number) => x * 2, expected: Either.left(2) },
@@ -52,8 +66,8 @@ describe('Either monad', () => {
   ])('$type should handle match operation correctly', ({ either, expected }) => {
     expect(
       either.match(
-        (x) => x,
-        (x) => x.toString()
+        (x) => x.toString(),
+        (x) => x
       )
     ).toEqual(expected);
   });
@@ -69,7 +83,7 @@ describe('Either monad', () => {
   ])(
     'Either $type can handle closures to unwrap distinct types of results by algebraic types',
     ({ either, expected, fr, fl }) => {
-      expect(either.match<string | number>(fl, fr)).toEqual(expected);
+      expect(either.match<string | number>(fr, fl)).toEqual(expected);
     }
   );
 
@@ -82,7 +96,7 @@ describe('Either monad', () => {
       expected: 'Error: Some Error',
     },
   ])('Either $type can handle closures to unwrap distinct types of results', ({ either, expected, fr, fl }) => {
-    expect(either.match(fl, fr)).toEqual(expected);
+    expect(either.match(fr, fl)).toEqual(expected);
   });
 
   it.each([

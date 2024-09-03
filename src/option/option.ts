@@ -1,11 +1,20 @@
 import { Nullable } from '../types';
+import { Monad } from '../monad';
+import { Matchable } from '../match';
 
-abstract class Option<T> {
+abstract class Option<T> implements Monad<T>, Matchable<T, undefined> {
   static of<T>(value: Nullable<T>): Option<T> {
     if (value == null) {
       return new None();
     }
     return new Some(value);
+  }
+
+  static from<T>(matchable: Matchable<T, unknown>) {
+    return matchable.match<Option<T>>(
+      (value: T) => Option.of(value),
+      () => Option.of<T>(undefined)
+    );
   }
 
   abstract getOrElse(otherValue: T): T;
@@ -16,7 +25,7 @@ abstract class Option<T> {
 
   abstract flatMap<U>(transform: (value: T) => Option<U>): Option<U>;
 
-  abstract match<U>(ifSome: (value: T) => U, ifNone: () => U): U;
+  abstract match<U>(ifSome: (value: T) => U, ifNone: (_: undefined) => U): U;
 
   abstract isSome(): this is Some<T>;
 
@@ -44,7 +53,7 @@ class Some<T> extends Option<T> {
     return transform(this.value);
   }
 
-  match<U>(some: (value: T) => U, _: () => never): U {
+  match<U>(some: (value: T) => U, _: (_: never) => never): U {
     return some(this.value);
   }
 
@@ -74,8 +83,8 @@ class None<T> extends Option<T> {
     return new None();
   }
 
-  match<U>(_: (value: T) => never, none: () => U): U {
-    return none();
+  match<U>(_: (_: never) => never, none: (noneValue: undefined) => U): U {
+    return none(undefined);
   }
 
   isNone(): this is None<T> {

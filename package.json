@@ -23,7 +23,18 @@
     "test": "vitest run",
     "semantic-release": "semantic-release"
   },
-  "author": "@leanmind/Mario S. Pinto Miranda",
+  "contributors": [
+    {
+      "name": "Mario Pinto Miranda",
+      "email": "mario.pinto.miranda@gmail.com",
+      "url": "https://mario-pinto-miranda.dev"
+    },
+    {
+      "name": "Miguel Ignacio Cabrera San Gil",
+      "email": "miguelcabsan@gmail.com",
+      "url": "https://myugen.dev"
+    }
+  ],
   "repository": "github:lean-mind/monads-ts",
   "bugs": {
     "url": "https://github.com/lean-mind/monads-ts/issues"

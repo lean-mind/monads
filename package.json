@@ -1,6 +1,6 @@
 {
-  "name": "@leanmind/monads-ts",
-  "version": "0.0.0-development",
+  "name": "@leanmind/monads",
+  "version": "1.0.0",
   "description": "A collection of monads implemented in TypeScript using object-oriented programming.",
   "keywords": [
     "functional-programming",
@@ -23,6 +23,7 @@
     "test": "vitest run",
     "semantic-release": "semantic-release"
   },
+  "author": "Lean Mind",
   "contributors": [
     {
       "name": "Mario Pinto Miranda",
@@ -35,9 +36,12 @@
       "url": "https://myugen.dev"
     }
   ],
-  "repository": "github:lean-mind/monads-ts",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/lean-mind/monads.git"
+  },
   "bugs": {
-    "url": "https://github.com/lean-mind/monads-ts/issues"
+    "url": "https://github.com/lean-mind/monads/issues"
   },
   "license": "MIT",
   "devDependencies": {

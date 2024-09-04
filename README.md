@@ -1,10 +1,10 @@
-# monads-ts
+# monads
 
 This is a set of implementations of monads in TypeScript with OOP perspective.
 It is a work in progress and the first monad implemented is the Either monad.
 
 <!-- TOC -->
-* [monads-ts](#monads-ts)
+* [monads](#monads)
   * [Either Monad](#either-monad)
     * [Usage](#usage)
       * [Creating an Either](#creating-an-either)
@@ -42,7 +42,7 @@ while `Left` is used to hold an error or failure.
 You can create an `Either` using the static methods `Either.right` and `Either.left`.
 
 ```typescript
-import { Either } from 'monads-ts';
+import { Either } from 'monads';
 
 // Creating a Right
 const right = Either.right(42);
@@ -56,7 +56,7 @@ const left = Either.left('Error');
 You can create an `Either` from a failed operations using the static method `Either.catch`.
 
 ```typescript
-import { Either } from 'monads-ts';
+import { Either } from 'monads';
 
 const findUser = (id: number): User => {
   if (id === 42) {
@@ -143,7 +143,7 @@ console.log(result); // 86
 Here is a complete example demonstrating the usage of the `Either` monad:
 
 ```typescript
-import { Either } from 'monads-ts';
+import { Either } from 'monads';
 
 function divide(a: number, b: number): Either<string, number> {
   if (b === 0) {
@@ -178,7 +178,7 @@ An `Option` is either a `Some` or a `None`.
 You can create an `Option` using the static methods `Option.of`.
 
 ```typescript
-import { Option } from 'monads-ts';
+import { Option } from 'monads';
 
 // Creating a Some
 const some = Option.of(42); // Some(42)

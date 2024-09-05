@@ -19,6 +19,7 @@
     "lint:watch": "esw --color --watch",
     "lint:fix": "npm run lint -- --fix",
     "format": "prettier --config .prettierrc '**/*.+(ts|tsx)'",
+    "format:check": "npm run format -- --check",
     "format:fix": "npm run format -- --write",
     "test": "vitest run",
     "semantic-release": "semantic-release"

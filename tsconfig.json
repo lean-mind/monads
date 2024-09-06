@@ -6,6 +6,7 @@
     ],
     "declaration": true,
     "module": "commonjs",
+    "moduleResolution": "node",
     "noImplicitAny": true,
     "strict": true,
     "rootDir": "src",

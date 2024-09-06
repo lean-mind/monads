@@ -5,6 +5,7 @@ It is a work in progress and the first monad implemented is the Either monad.
 
 <!-- TOC -->
 * [monads](#monads)
+  * [Installation](#installation)
   * [Either Monad](#either-monad)
     * [Usage](#usage)
       * [Creating an Either](#creating-an-either)
@@ -27,6 +28,14 @@ It is a work in progress and the first monad implemented is the Either monad.
       * [Matching an Option](#matching-an-option)
       * [Checking if an Option is Some or None](#checking-if-an-option-is-some-or-none)
 <!-- TOC -->
+
+## Installation
+
+You can install the package using npm:
+
+```bash
+npm install @leanmind/monads
+```
 
 ## Either Monad
 

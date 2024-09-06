@@ -1,5 +1,16 @@
 {
   "name": "@leanmind/monads",
+  "type": "module",
+  "exports": {
+    "./either": {
+      "types": "./dist/either/index.d.ts",
+      "default": "./dist/either/index.js"
+    },
+    "./option": {
+      "types": "./dist/option/index.d.ts",
+      "default": "./dist/option/index.js"
+    }
+  },
   "version": "0.0.0-semantically-released",
   "description": "A collection of monads implemented in TypeScript using object-oriented programming.",
   "keywords": [
@@ -8,7 +19,6 @@
     "typescript",
     "oop"
   ],
-  "main": "index.js",
   "scripts": {
     "analize": "npm run lint:fix && npm run compile",
     "build": "npm run lint:fix && tsc",

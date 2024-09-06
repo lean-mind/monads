@@ -1,12 +1,13 @@
 {
   "compilerOptions": {
-    "target": "es5",
+    "target": "ESNext",
     "lib": [
-      "es6"
+      "esnext"
     ],
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
     "declaration": true,
-    "module": "commonjs",
-    "moduleResolution": "node",
+    "esModuleInterop": true,
     "noImplicitAny": true,
     "strict": true,
     "rootDir": "src",
@@ -20,5 +21,5 @@
     "**/*.spec.ts",
     "**/*.test.ts",
     "dist"
-    ]
+  ]
 }

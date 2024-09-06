@@ -1,25 +1,15 @@
 {
   "compilerOptions": {
-    "target": "ESNext",
-    "lib": [
-      "esnext"
-    ],
-    "module": "ESNext",
-    "moduleResolution": "Bundler",
     "declaration": true,
+    "outDir": "./dist",
+    "module": "ESNext",
+    "target": "ESNext",
+    "lib": ["ES2023"],
+    "moduleResolution": "node",
     "esModuleInterop": true,
-    "noImplicitAny": true,
-    "strict": true,
-    "rootDir": "src",
-    "outDir": "dist"
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true
   },
-  "include": [
-    "src/**/*.ts"
-  ],
-  "exclude": [
-    "node_modules",
-    "**/*.spec.ts",
-    "**/*.test.ts",
-    "dist"
-  ]
+  "include": ["src"],
+  "exclude": ["node_modules", "dist", "**/*.test.ts", "**/*.spec.ts"]
 }

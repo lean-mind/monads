@@ -33,7 +33,7 @@ describe('Try monad', () => {
     {
       type: 'Success',
       tryMonad: Try.toExecute(() => 2),
-      closure: (x: number) => Try.toExecute(() => 2 * 2),
+      closure: (x: number) => Try.toExecute(() => x * 2),
       expected: new Success(4),
     },
     {
@@ -41,7 +41,7 @@ describe('Try monad', () => {
       tryMonad: Try.toExecute(() => {
         throw new Error();
       }),
-      closure: (x: number) => Try.toExecute(() => 2 * 2),
+      closure: (x: number) => Try.toExecute(() => x * 2),
       expected: new Failure(new Error()),
     },
   ])('$type should handle flatMap operation correctly', ({ tryMonad, closure, expected }) => {
@@ -60,7 +60,10 @@ describe('Try monad', () => {
       tryMonad: Try.toExecute(() => {
         throw new Error('Error: ');
       }),
-      closure: (error: Error) => Try.toExecute(() => {throw new Error(error.message + 'description')}),
+      closure: (error: Error) =>
+        Try.toExecute(() => {
+          throw new Error(error.message + 'description');
+        }),
       expected: new Failure(new Error('Error: description')),
     },
   ])('$type should handle flatMapLeft operation correctly', ({ tryMonad, closure, expected }) => {

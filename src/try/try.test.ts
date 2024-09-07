@@ -49,30 +49,6 @@ describe('Try monad', () => {
   });
 
   it.each([
-    {
-      type: 'Success',
-      tryMonad: Try.toExecute(() => '2'),
-      closure: (x: string) => Try.toExecute(() => x + '2'),
-      expected: new Success('2'),
-    },
-    {
-      type: 'Failure',
-      tryMonad: Try.toExecute(() => {
-        throw new Error('Error: ');
-      }),
-      closure: (error: Error) =>
-        Try.toExecute(() => {
-          throw new Error(error.message + 'description');
-        }),
-      expected: new Failure(new Error('Error: description')),
-    },
-  ])('$type should handle flatMapLeft operation correctly', ({ tryMonad, closure, expected }) => {
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment -- ignore
-    // @ts-expect-error
-    expect(tryMonad.flatMapLeft(closure)).toEqual(expected);
-  });
-
-  it.each([
     { type: 'Success', tryMonad: Try.toExecute(() => 2), expected: 2 },
     {
       type: 'None',

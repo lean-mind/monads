@@ -1,13 +1,12 @@
 import { Monad } from '../monad';
 import { Matchable } from '../match';
-import { Fallible } from '../types';
 
-abstract class Try<T> implements Monad<T>, Matchable<T, undefined> {
-  static toExecute<T>(executable: Fallible<T>): Try<T> {
+abstract class Try<T> implements Monad<T>, Matchable<T, Error> {
+  static toExecute<T>(executable: () => T): Try<T> {
     try {
       return new Success(executable());
     } catch (error) {
-      return new Failure(error);
+      return new Failure(error as Error);
     }
   }
 
@@ -15,9 +14,7 @@ abstract class Try<T> implements Monad<T>, Matchable<T, undefined> {
 
   abstract flatMap<U>(transform: (value: T) => Try<U>): Try<U>;
 
-  abstract flatMapLeft<U>(transform: (value: T) => Try<U>): Try<U>;
-
-  abstract match<U>(ifSuccess: (value: T) => U, ifFailure: (_: undefined) => U): U;
+  abstract match<U>(ifSuccess: (value: T) => U, ifFailure: (error: Error) => U): U;
 
   abstract isSuccess(): this is Success<T>;
 
@@ -29,28 +26,20 @@ class Success<T> extends Try<T> {
     super();
   }
 
-  flatMap<U>(transform: (value: T) => Try<U>): Try<U> {
-    return transform(this.value);
-  }
-
-  isFailure(): this is Failure<T> {
-    return false;
-  }
-
-  isSuccess(): this is Success<T> {
-    return true;
-  }
-
   map<U>(transform: (value: T) => U): Try<U> {
     return new Success(transform(this.value));
   }
-
-  match<S>(ifSuccess: (value: T) => S, ifFailure: (other: undefined) => S): S {
-    return ifFailure(this.value);
+  flatMap<U>(transform: (value: T) => Try<U>): Try<U> {
+    return transform(this.value);
   }
-
-  flatMapLeft<U>(transform: (value: T) => Try<U>): Try<U> {
-    return new Success(this.value);
+  match<U>(ifSuccess: (value: T) => U, ifFailure: (_: never) => U): U {
+    return ifSuccess(this.value);
+  }
+  isSuccess(): this is Success<T> {
+    return true;
+  }
+  isFailure(): this is Failure<T> {
+    return false;
   }
 }
 
@@ -59,28 +48,20 @@ class Failure<T> extends Try<T> {
     super();
   }
 
-  flatMap<U>(transform: (_: never) => Try<U>): Try<U> {
+  map<U>(transform: (_: never) => never): Try<never> {
     return new Failure(this.error);
   }
-
-  isFailure(): this is Failure<T> {
-    return true;
+  flatMap<U>(transform: (_: never) => Try<never>): Try<never> {
+    return new Failure(this.error);
   }
-
+  match<U>(ifSuccess: (_: never) => never, ifFailure: (error: Error) => U): U {
+    return ifFailure(this.error);
+  }
   isSuccess(): this is Success<T> {
     return false;
   }
-
-  map<U>(transform: (value: T) => U): Try<U> {
-    return new Failure(this.error);
-  }
-
-  match<U>(ifSuccess: (value: T) => U, ifFailure: (_: T) => U): U {
-    return ifFailure(this.error);
-  }
-
-  flatMapLeft<U>(transform: (value: T) => Try<U>): Try<U> {
-    return transform(this.error);
+  isFailure(): this is Failure<T> {
+    return true;
   }
 }
 

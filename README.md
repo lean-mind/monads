@@ -27,7 +27,7 @@ It is a work in progress and the first monad implemented is the Either monad.
         * [Using `map`](#using-map)
       * [Matching an Option](#matching-an-option)
       * [Checking if an Option is Some or None](#checking-if-an-option-is-some-or-none)
-  * [Try](#try-monad)
+  * [Try Monad](#try-monad)
     * [Usage](#usage-2)
       * [Using `map`](#using-map-1)
       * [Using `flatMap`](#using-flatmap-1)

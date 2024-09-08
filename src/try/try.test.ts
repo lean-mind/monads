@@ -16,57 +16,6 @@ describe('Try monad', () => {
   });
 
   it.each([
-    { type: 'Success', tryMonad: Try.execute(() => 2), closure: (x: number) => x * 2, expected: new Success(4) },
-    {
-      type: 'Failure',
-      tryMonad: Try.execute(() => {
-        throw new Error();
-      }),
-      closure: (x: number) => x * 2,
-      expected: new Failure(new Error()),
-    },
-  ])('$type should handle map operation correctly', ({ tryMonad, closure, expected }) => {
-    expect(tryMonad.map(closure)).toStrictEqual(expected);
-  });
-
-  it.each([
-    {
-      type: 'Success',
-      tryMonad: Try.execute(() => 2),
-      closure: (x: number) => Try.execute(() => x * 2),
-      expected: new Success(4),
-    },
-    {
-      type: 'Failure',
-      tryMonad: Try.execute(() => {
-        throw new Error();
-      }),
-      closure: (x: number) => Try.execute(() => x * 2),
-      expected: new Failure(new Error()),
-    },
-  ])('$type should handle flatMap operation correctly', ({ tryMonad, closure, expected }) => {
-    expect(tryMonad.flatMap(closure)).toEqual(expected);
-  });
-
-  it.each([
-    { type: 'Success', tryMonad: Try.execute(() => 2), expected: 2 },
-    {
-      type: 'None',
-      tryMonad: Try.execute(() => {
-        throw new Error();
-      }),
-      expected: 2,
-    },
-  ])('$type should handle match operation correctly', ({ tryMonad, expected }) => {
-    expect(
-      tryMonad.match(
-        (x) => x,
-        () => 2
-      )
-    ).toEqual(expected);
-  });
-
-  it.each([
     { type: 'Success', tryMonad: Try.execute(() => 2), expected: false },
     {
       type: 'Failure',

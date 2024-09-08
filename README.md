@@ -27,6 +27,12 @@ It is a work in progress and the first monad implemented is the Either monad.
         * [Using `map`](#using-map)
       * [Matching an Option](#matching-an-option)
       * [Checking if an Option is Some or None](#checking-if-an-option-is-some-or-none)
+  * [Try](#try-monad)
+    * [Usage](#usage-2)
+      * [Using `map`](#using-map-1)
+      * [Using `flatMap`](#using-flatmap-1)
+      * [Matching a Try](#matching-a-try)
+      * [Handling errors in Infrastructure code](#handling-errors-in-infrastructure-code)
 <!-- TOC -->
 
 ## Installation
@@ -264,3 +270,74 @@ const none = Option.of(undefined);
 none.isSome(); // false
 none.isNone(); // true
 ```
+
+## Try Monad
+
+The `Try` monad represents a computation that may fail.
+
+### Usage
+
+You can create a `Try` using the static method `Try.execute`.
+
+```typescript
+import { Try } from 'monads';
+
+const success = Try.execute(() => 42); // Success(42)
+
+const failure = Try.execute(() => {
+  throw new Error('Error');
+}); // Failure(Error('Error'))
+```
+
+### Using `map`
+
+You can use the `map` method to transform the value inside a `Success`.
+
+```typescript
+const success = Try.execute(() => 42).map(x => x + 1); // Success(43)
+```
+
+### Using `flatMap`
+
+You can use the `flatMap` method to transform the value inside a `Success` with a fallible closure.
+
+```typescript
+const success = Try.execute(() => 42).flatMap(x => Try.execute(() => x + 1)); // Success(43)
+```
+
+### Matching a Try
+
+You can use the `match` method to handle both `Success` and `Failure` cases and unwrap the result.
+
+```typescript
+const success = Try.execute(() => 42).match(
+  err => `Error: ${err}`,
+  x => x + 1
+); // 43
+
+const failure = Try.execute(() => {
+  throw new Error('Error');
+}).match(
+  err => `Error: ${err}`,
+  x => x + 1
+); // 'Error: Error'
+```
+
+### Handling errors in Infrastructure code
+
+Normally, Try is used to handle `Exceptions` that are raise by third party libraries
+
+```typescript
+import { Try } from 'monads';
+
+const result = Try.execute(() => {
+  // Some API of a library that may throw an exception
+  return 42;
+}).match(
+  err => `Error: ${err}`,
+  x => x + 1
+);
+
+console.log(result); // 43
+```
+

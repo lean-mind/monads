@@ -33,6 +33,7 @@ It is a work in progress and the first monad implemented is the Either monad.
       * [Using `flatMap`](#using-flatmap-1)
       * [Matching a Try](#matching-a-try)
       * [Handling errors in Infrastructure code](#handling-errors-in-infrastructure-code)
+      * [Checking if a Try is Success or Failure](#checking-if-a-try-is-success-or-failure)
 <!-- TOC -->
 
 ## Installation
@@ -341,3 +342,16 @@ const result = Try.execute(() => {
 console.log(result); // 43
 ```
 
+### Checking if a Try is Success or Failure
+
+If needed, you can check explicitly if a `Try` is `Success` or `Failure` using the `isSuccess` and `isFailure` methods.
+
+```typescript
+const success = Try.execute(() => 42);
+success.isSuccess(); // true
+
+const failure = Try.execute(() => {
+  throw new Error('Error');
+});
+failure.isFailure(); // true
+```

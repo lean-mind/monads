@@ -12,14 +12,14 @@ describe('Try monad', () => {
       expected: new Failure(new Error()),
     },
   ])('should create $type correctly', ({ executable, expected }) => {
-    expect(Try.toExecute(executable)).toEqual(expected);
+    expect(Try.execute(executable)).toEqual(expected);
   });
 
   it.each([
-    { type: 'Success', tryMonad: Try.toExecute(() => 2), closure: (x: number) => x * 2, expected: new Success(4) },
+    { type: 'Success', tryMonad: Try.execute(() => 2), closure: (x: number) => x * 2, expected: new Success(4) },
     {
       type: 'Failure',
-      tryMonad: Try.toExecute(() => {
+      tryMonad: Try.execute(() => {
         throw new Error();
       }),
       closure: (x: number) => x * 2,
@@ -32,16 +32,16 @@ describe('Try monad', () => {
   it.each([
     {
       type: 'Success',
-      tryMonad: Try.toExecute(() => 2),
-      closure: (x: number) => Try.toExecute(() => x * 2),
+      tryMonad: Try.execute(() => 2),
+      closure: (x: number) => Try.execute(() => x * 2),
       expected: new Success(4),
     },
     {
       type: 'Failure',
-      tryMonad: Try.toExecute(() => {
+      tryMonad: Try.execute(() => {
         throw new Error();
       }),
-      closure: (x: number) => Try.toExecute(() => x * 2),
+      closure: (x: number) => Try.execute(() => x * 2),
       expected: new Failure(new Error()),
     },
   ])('$type should handle flatMap operation correctly', ({ tryMonad, closure, expected }) => {
@@ -49,10 +49,10 @@ describe('Try monad', () => {
   });
 
   it.each([
-    { type: 'Success', tryMonad: Try.toExecute(() => 2), expected: 2 },
+    { type: 'Success', tryMonad: Try.execute(() => 2), expected: 2 },
     {
       type: 'None',
-      tryMonad: Try.toExecute(() => {
+      tryMonad: Try.execute(() => {
         throw new Error();
       }),
       expected: 2,
@@ -67,10 +67,10 @@ describe('Try monad', () => {
   });
 
   it.each([
-    { type: 'Success', tryMonad: Try.toExecute(() => 2), expected: false },
+    { type: 'Success', tryMonad: Try.execute(() => 2), expected: false },
     {
       type: 'Failure',
-      tryMonad: Try.toExecute(() => {
+      tryMonad: Try.execute(() => {
         throw new Error();
       }),
       expected: true,
@@ -80,10 +80,10 @@ describe('Try monad', () => {
   });
 
   it.each([
-    { type: 'Success', tryMonad: Try.toExecute(() => 2), expected: true },
+    { type: 'Success', tryMonad: Try.execute(() => 2), expected: true },
     {
       type: 'Failure',
-      tryMonad: Try.toExecute(() => {
+      tryMonad: Try.execute(() => {
         throw new Error();
       }),
       expected: false,

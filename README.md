@@ -58,7 +58,7 @@ while `Left` is used to hold an error or failure.
 You can create an `Either` using the static methods `Either.right` and `Either.left`.
 
 ```typescript
-import { Either } from 'monads';
+import { Either } from '@leanmind/monads';
 
 // Creating a Right
 const right = Either.right(42);
@@ -72,7 +72,7 @@ const left = Either.left('Error');
 You can create an `Either` from a failed operations using the static method `Either.catch`.
 
 ```typescript
-import { Either } from 'monads';
+import { Either } from '@leanmind/monads';
 
 const findUser = (id: number): User => {
   if (id === 42) {
@@ -93,6 +93,8 @@ transform the value inside a `Left`.
 ##### Using `flatMap` and `flatMapLeft`
 
 ```typescript
+import { Either } from '@leanmind/monads';m
+
 const right = Either.right(42).flatMap(x => Either.right(x + 1)); // Right(43)
 const left = Either.left('Error').flatMapLeft(err => Either.left(`New ${err}`)); // Left('New Error')
 ```
@@ -100,6 +102,8 @@ const left = Either.left('Error').flatMapLeft(err => Either.left(`New ${err}`));
 ##### Using `map` and `mapLeft`
 
 ```typescript
+import { Either } from '@leanmind/monads';
+
 const right = Either.right(42).map(x => x + 1); // Right(43)
 const left = Either.left('Error').mapLeft(err => `New ${err}`); // Left('New Error')
 ```
@@ -109,6 +113,8 @@ const left = Either.left('Error').mapLeft(err => `New ${err}`); // Left('New Err
 You can use the `match` method to handle both `Right` and `Left` cases and unwrap the result.
 
 ```typescript
+import { Either } from '@leanmind/monads';
+
 const sucess = Either.right(42).match(
   err => `Error: ${err}`,
   x => (x + 1).toString()
@@ -127,6 +133,8 @@ Probably you will not need to use these methods, but they are available
 in case of refactoring from try-catch blocks or other situations.
 
 ```typescript
+import { Either } from '@leanmind/monads';
+
 const right = Either.right(42);
 const left = Either.left('Error');
 
@@ -143,6 +151,8 @@ You can chain operations using the `map`, `mapLeft`, `flatMap` and `flatMapLeft`
 The following example demonstrates how to chain operations using the map method:
 
 ```typescript
+import { Either } from '@leanmind/monads';
+
 const result = Either.right(42)
   .map(x => x + 1)
   .map(x => x * 2)
@@ -159,7 +169,7 @@ console.log(result); // 86
 Here is a complete example demonstrating the usage of the `Either` monad:
 
 ```typescript
-import { Either } from 'monads';
+import { Either } from '@leanmind/monads';
 
 function divide(a: number, b: number): Either<string, number> {
   if (b === 0) {
@@ -194,7 +204,7 @@ An `Option` is either a `Some` or a `None`.
 You can create an `Option` using the static methods `Option.of`.
 
 ```typescript
-import { Option } from 'monads';
+import { Option } from '@leanmind/monads';
 
 // Creating a Some
 const some = Option.of(42); // Some(42)
@@ -208,6 +218,8 @@ const none = Option.of(null); // None
 You can use the `getOrElse` method to retrieve the value of an `Option` or provide a default value if it is `None`.
 
 ```typescript
+import { Option } from '@leanmind/monads';
+
 const some = Option.of(42);
 some.getOrElse(0); // 42
 
@@ -220,6 +232,8 @@ none.getOrElse(0); // 0
 You can use the `filter` method to keep the `Some` value if it satisfies a predicate.
 
 ```typescript
+import { Option } from '@leanmind/monads';m
+
 const some = Option.of(42).filter(x => x > 40); // Some(42)
 const none = Option.of(42).filter(x => x > 50); // None
 ```
@@ -231,6 +245,8 @@ You can use the `flatMap` or `map` method to transform the `Some` value.
 ##### Using `flatMap`
 
 ```typescript
+import { Option } from '@leanmind/monads';m
+
 const some = Option.of(42).flatMap(x => Option.of(x + 1)); // Some(43)
 const none = Option.of(null).flatMap(x => Option.of(x + 1)); // None
 ```
@@ -238,6 +254,8 @@ const none = Option.of(null).flatMap(x => Option.of(x + 1)); // None
 ##### Using `map`
 
 ```typescript
+import { Option } from '@leanmind/monads';
+
 const some = Option.of(42).map(x => x + 1); // Some(43)
 const none = Option.of(null).map(x => x + 1); // None
 ```
@@ -247,6 +265,8 @@ const none = Option.of(null).map(x => x + 1); // None
 You can use the `match` method to handle both `Some` and `None` cases and unwrap the result.
 
 ```typescript
+import { Option } from '@leanmind/monads';
+
 const some = Option.of(42).match(
   x => x + 1,
   () => 'No value'
@@ -263,6 +283,8 @@ const none = Option.of(null).match(
 If needed, you can check explicitly if an `Option` is `Some` or `None` using the `isSome` and `isNone` methods.
 
 ```typescript
+import { Option } from '@leanmind/monads';
+
 const some = Option.of(42);
 some.isSome(); // true
 some.isNone(); // false
@@ -281,7 +303,7 @@ The `Try` monad represents a computation that may fail.
 You can create a `Try` using the static method `Try.execute`.
 
 ```typescript
-import { Try } from 'monads';
+import { Try } from '@leanmind/monads';
 
 const success = Try.execute(() => 42); // Success(42)
 
@@ -295,6 +317,8 @@ const failure = Try.execute(() => {
 You can use the `map` method to transform the value inside a `Success`.
 
 ```typescript
+import { Try } from '@leanmind/monads';m
+
 const success = Try.execute(() => 42).map(x => x + 1); // Success(43)
 ```
 
@@ -303,6 +327,8 @@ const success = Try.execute(() => 42).map(x => x + 1); // Success(43)
 You can use the `flatMap` method to transform the value inside a `Success` with a fallible closure.
 
 ```typescript
+import { Try } from '@leanmind/monads';
+
 const success = Try.execute(() => 42).flatMap(x => Try.execute(() => x + 1)); // Success(43)
 ```
 
@@ -311,6 +337,8 @@ const success = Try.execute(() => 42).flatMap(x => Try.execute(() => x + 1)); //
 You can use the `match` method to handle both `Success` and `Failure` cases and unwrap the result.
 
 ```typescript
+import { Try } from '@leanmind/monads';
+
 const success = Try.execute(() => 42).match(
   err => `Error: ${err}`,
   x => x + 1
@@ -329,7 +357,7 @@ const failure = Try.execute(() => {
 Normally, Try is used to handle `Exceptions` that are raise by third party libraries
 
 ```typescript
-import { Try } from 'monads';
+import { Try } from '@leanmind/monads';
 
 const result = Try.execute(() => {
   // Some API of a library that may throw an exception
@@ -347,6 +375,8 @@ console.log(result); // 43
 If needed, you can check explicitly if a `Try` is `Success` or `Failure` using the `isSuccess` and `isFailure` methods.
 
 ```typescript
+import { Try } from '@leanmind/monads';
+
 const success = Try.execute(() => 42);
 success.isSuccess(); // true
 

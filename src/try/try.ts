@@ -2,7 +2,7 @@ import { Monad } from '../monad';
 import { Matchable } from '../match';
 
 abstract class Try<T> implements Monad<T>, Matchable<T, Error> {
-  static toExecute<T>(executable: () => T): Try<T> {
+  static execute<T>(executable: () => T): Try<T> {
     try {
       return new Success(executable());
     } catch (error) {

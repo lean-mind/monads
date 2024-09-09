@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { Either } from '../either';
 import { Option } from '../option';
-import { Try } from '../../dist/try';
+import { Try } from '../try';
 
 const testCasesMonadMapOperation = [
   {

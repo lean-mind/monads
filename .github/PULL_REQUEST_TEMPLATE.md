@@ -11,11 +11,6 @@
      - ✅ Provide tests for your changes.
      - 📝 Use descriptive commit messages.
      - 📗 Update any related documentation and include any relevant screenshots.
-
-     NOTE: Pull Requests from forked repositories will need to be reviewed by
-     a Forem Team member before any CI builds will run. Once your PR is approved
-     with a `/ci` reply to the PR, it will be allowed to run subsequent builds without
-     manual approval.
 -->
 
 ## What type of PR is this? (check all applicable)
@@ -31,20 +26,6 @@
 <!-- Please include a summary of the change and which issue is fixed. Please also include relevant motivation and
 context. List any dependencies that are required for this change. -->
 
-## Related Tickets & Documents
-
-<!--
-For pull requests that relate or close an issue, please include them
-below.  We like to follow [Github's guidance on linking issues to pull requests](https://docs.github.com/en/issues/tracking-your-work-with-issues/linking-a-pull-request-to-an-issue).
-
-For example having the text: "closes #1234" would connect the current pull
-request to issue 1234.  And when we merge the pull request, Github will
-automatically close the issue.
--->
-
-- Related Issue #
-- Closes #
-
 ## Added/updated tests?
 
 _We encourage you to keep the quality of the code by creating test._
@@ -56,4 +37,4 @@ _We encourage you to keep the quality of the code by creating test._
 
 ## [optional] What gif best describes this PR or how it makes you feel?
 
-![alt_text](gif_link)
+![alt_text](https://example.com/image.gif)

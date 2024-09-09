@@ -10,6 +10,13 @@ abstract class Try<T> implements Monad<T>, Matchable<T, Error> {
     }
   }
 
+  static from<T>(matchable: Matchable<T, unknown>): Try<T> {
+    return matchable.match<Try<T>>(
+      (value: T) => new Success(value),
+      (error: unknown) => (error instanceof Error ? new Failure(error) : Failure.NO_ERROR_PROVIDED)
+    );
+  }
+
   abstract map<U>(transform: (value: T) => U): Try<U>;
 
   abstract flatMap<U>(transform: (value: T) => Try<U>): Try<U>;
@@ -29,15 +36,19 @@ class Success<T> extends Try<T> {
   map<U>(transform: (value: T) => U): Try<U> {
     return new Success(transform(this.value));
   }
+
   flatMap<U>(transform: (value: T) => Try<U>): Try<U> {
     return transform(this.value);
   }
-  match<U>(ifSuccess: (value: T) => U, ifFailure: (_: never) => U): U {
+
+  match<U>(ifSuccess: (value: T) => U, _: (_: never) => U): U {
     return ifSuccess(this.value);
   }
+
   isSuccess(): this is Success<T> {
     return true;
   }
+
   isFailure(): this is Failure<T> {
     return false;
   }
@@ -48,18 +59,24 @@ class Failure<T> extends Try<T> {
     super();
   }
 
-  map<U>(transform: (_: never) => never): Try<never> {
+  static NO_ERROR_PROVIDED = new Failure<never>(new Error('No error provided'));
+
+  map(_: (_: never) => never): Try<never> {
     return new Failure(this.error);
   }
-  flatMap<U>(transform: (_: never) => Try<never>): Try<never> {
+
+  flatMap(_: (_: never) => Try<never>): Try<never> {
     return new Failure(this.error);
   }
-  match<U>(ifSuccess: (_: never) => never, ifFailure: (error: Error) => U): U {
+
+  match<U>(_: (_: never) => never, ifFailure: (error: Error) => U): U {
     return ifFailure(this.error);
   }
+
   isSuccess(): this is Success<T> {
     return false;
   }
+
   isFailure(): this is Failure<T> {
     return true;
   }

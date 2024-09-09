@@ -17,6 +17,13 @@ abstract class Either<L, R> implements Monad<R>, Matchable<R, L> {
     );
   }
 
+  static complete<R>(completable: Completable<R>): AsyncEither<Error, R> {
+    return completable.complete<Either<Error, R>>(
+      (value: R) => Either.right(value),
+      (error: Error) => Either.left(error)
+    );
+  }
+
   static catch<T>(execute: () => T): Either<Error, T> {
     try {
       return Either.right(execute());
@@ -25,13 +32,13 @@ abstract class Either<L, R> implements Monad<R>, Matchable<R, L> {
     }
   }
 
-  abstract map<T>(f: (r: R) => T): Either<L, T>;
+  abstract map<T>(transform: (r: R) => T): Either<L, T>;
 
-  abstract mapLeft<T>(f: (l: L) => T): Either<T, R>;
+  abstract mapLeft<T>(transform: (l: L) => T): Either<T, R>;
 
-  abstract flatMap<T>(f: (r: R) => Either<L, T>): Either<L, T>;
+  abstract flatMap<T>(transform: (r: R) => Either<L, T>): Either<L, T>;
 
-  abstract flatMapLeft<T>(f: (l: L) => Either<T, R>): Either<T, R>;
+  abstract flatMapLeft<T>(transform: (l: L) => Either<T, R>): Either<T, R>;
 
   abstract match<T>(ifRight: (r: R) => T, ifLeft: (l: L) => T): T;
 
@@ -45,32 +52,32 @@ class Left<L, R> extends Either<L, R> {
     super();
   }
 
-  map<T>(_: (r: R) => T): Either<L, T> {
+  map(_: (r: never) => never): Either<L, never> {
     return new Left(this.value);
   }
 
-  mapLeft<T>(f: (l: L) => T): Either<T, R> {
-    return new Left(f(this.value));
+  mapLeft<T>(transform: (l: L) => T): Either<T, never> {
+    return new Left(transform(this.value));
   }
 
-  flatMap<T>(_: (r: never) => Either<L, T>): Either<L, T> {
+  flatMap(_: (r: never) => Either<L, never>): Either<L, never> {
     return new Left(this.value);
+  }
+
+  flatMapLeft<T>(transform: (l: L) => Either<T, never>): Either<T, never> {
+    return transform(this.value);
   }
 
   match<T>(_: (_: never) => never, ifLeft: (l: L) => T): T {
     return ifLeft(this.value);
   }
 
-  isLeft(): this is Left<L, R> {
+  isLeft(): this is Left<L, never> {
     return true;
   }
 
-  isRight(): this is Right<L, R> {
+  isRight(): this is Right<L, never> {
     return false;
-  }
-
-  flatMapLeft<T>(f: (l: L) => Either<T, R>): Either<T, R> {
-    return f(this.value);
   }
 }
 
@@ -79,33 +86,33 @@ class Right<L, R> extends Either<L, R> {
     super();
   }
 
-  map<T>(f: (r: R) => T): Either<L, T> {
-    return new Right(f(this.value));
+  map<T>(transform: (r: R) => T): Either<never, T> {
+    return new Right(transform(this.value));
   }
 
-  mapLeft<T>(_: (l: L) => T): Either<T, R> {
+  mapLeft(_: (l: L) => never): Either<never, R> {
     return new Right(this.value);
   }
 
-  flatMap<T>(f: (r: R) => Either<L, T>): Either<L, T> {
-    return f(this.value);
+  flatMap<T>(transform: (r: R) => Either<never, T>): Either<never, T> {
+    return transform(this.value);
+  }
+
+  flatMapLeft(_: (l: never) => Either<never, R>): Either<never, R> {
+    return new Right(this.value);
   }
 
   match<T>(ifRight: (r: R) => T, _: (_: never) => never): T {
     return ifRight(this.value);
   }
 
-  isLeft(): this is Left<L, R> {
+  isLeft(): this is Left<never, R> {
     return false;
   }
 
-  isRight(): this is Right<L, R> {
+  isRight(): this is Right<never, R> {
     return true;
-  }
-
-  flatMapLeft<T>(_: (l: never) => Either<T, R>): Either<T, R> {
-    return new Right(this.value);
   }
 }
 
-export { Either, Right, Left };
+export { Either, Right, Left, AsyncEither };

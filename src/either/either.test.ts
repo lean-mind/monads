@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { Either, Right } from './either';
+import { Either } from './either';
 import { Option } from '../option';
 
 describe('Either monad', () => {

@@ -8,24 +8,20 @@
 
 ## Testing
 
-### Monad tests
+### Role based testing
+From testing perspective, we are applying a role based approach in order to unify the testing
+of the monads and matchable roles. So, in this way, we have just to create tests cases for each role when
+we create a new monad or matchable.
 
-From testing perspective, we are applying a role based testing approach. In this case,
-the role is monad, and we create tests cases for each monad.
+#### Monad
+For this role, `map` and `flatMap` are the main operations that we have to test.
 
-check the `src/monads/monads.test.ts` folder for more information.
+Check the file `src/monads/monads.test.ts` for more information.
 
-So, you have just to new test cases for your new monad that you are going to implement.
-
-
-### Matchable tests
-
-From testing perspective, we are applying a role based testing approach. In this case,
-the role is matchable, and we create tests cases for each matchable.
+#### Matchable
+For this role, we have to test the `match` operation.
 
 check the `src/matchable/matchable.test.ts` folder for more information.
-
-So, you have just to new test cases for your new matchable that you are going to implement.
 
 
 ### Specific tests for each monad

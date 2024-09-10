@@ -17,13 +17,6 @@ abstract class Either<L, R> implements Monad<R>, Matchable<R, L> {
     );
   }
 
-  static complete<R>(completable: Completable<R>): AsyncEither<Error, R> {
-    return completable.complete<Either<Error, R>>(
-      (value: R) => Either.right(value),
-      (error: Error) => Either.left(error)
-    );
-  }
-
   static catch<T>(execute: () => T): Either<Error, T> {
     try {
       return Either.right(execute());
@@ -115,4 +108,4 @@ class Right<L, R> extends Either<L, R> {
   }
 }
 
-export { Either, Right, Left, AsyncEither };
+export { Either, Right, Left };

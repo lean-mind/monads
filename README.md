@@ -41,6 +41,12 @@ It is a work in progress and the first monad implemented is the Either monad.
         * [Using `flatMap`](#using-flatmap-2)
         * [Using `map`](#using-map-2)
       * [Evaluate a Future](#evaluate-a-future)
+  * [IO Monad](#io-monad)
+    * [Usage](#usage-4)
+      * [Creating an IO](#creating-an-io)
+      * [Mapping over an IO](#mapping-over-an-io)
+        * [Using `flatMap`](#using-flatmap-3)
+        * [Using `map`](#using-map-3)
 <!-- TOC -->
 
 ## Installation
@@ -462,3 +468,56 @@ await failureFuture.complete(
   err => console.error(err)
 ); // Error('Error')
 ```
+
+## IO Monad
+
+The `IO` monad represents a computation that may have side effects.
+
+In this way, the `IO` monad is used to encapsulate side effects in a pure functional way.
+
+So, you can operate as pure functions until you call the `run` method.
+
+### Usage
+
+#### Creating an IO
+You can create an `IO` using the static method `IO.of`.
+
+```typescript
+import { IO } from '@leanmind/monads';
+
+const io = IO.of(() => 42);
+```
+
+#### Mapping over an IO
+
+You can use the `flatMap` or `map` method to concatenate `IO` operations.
+
+The operation is not executed until you call the `run` method.
+
+##### Using `flatMap`
+
+```typescript
+import { IO } from '@leanmind/monads';
+
+const io = IO.of(() => 42).flatMap(x => IO.of(() => x + 1));
+
+io.run(); // 43
+```
+
+##### Using `map`
+
+```typescript
+import { IO } from '@leanmind/monads';
+
+const io = IO.of(() => 42).map(x => x + 1);
+
+io.run(); // 43
+```
+
+
+
+
+
+
+
+

@@ -29,11 +29,18 @@ It is a work in progress and the first monad implemented is the Either monad.
       * [Checking if an Option is Some or None](#checking-if-an-option-is-some-or-none)
   * [Try Monad](#try-monad)
     * [Usage](#usage-2)
-      * [Using `map`](#using-map-1)
-      * [Using `flatMap`](#using-flatmap-1)
-      * [Matching a Try](#matching-a-try)
-      * [Handling errors in Infrastructure code](#handling-errors-in-infrastructure-code)
-      * [Checking if a Try is Success or Failure](#checking-if-a-try-is-success-or-failure)
+    * [Using `map`](#using-map-1)
+    * [Using `flatMap`](#using-flatmap-1)
+    * [Matching a Try](#matching-a-try)
+    * [Handling errors in Infrastructure code](#handling-errors-in-infrastructure-code)
+    * [Checking if a Try is Success or Failure](#checking-if-a-try-is-success-or-failure)
+  * [Future Monad](#future-monad)
+    * [Usage](#usage-3)
+      * [Creating a Future](#creating-a-future)
+      * [Mapping over a Future](#mapping-over-a-future)
+        * [Using `flatMap`](#using-flatmap-2)
+        * [Using `map`](#using-map-2)
+      * [Evaluate a Future](#evaluate-a-future)
 <!-- TOC -->
 
 ## Installation
@@ -384,4 +391,74 @@ const failure = Try.execute(() => {
   throw new Error('Error');
 });
 failure.isFailure(); // true
+```
+
+## Future Monad
+
+The `Future` monad represents a computation that may be executed asynchronously.
+
+### Usage
+
+#### Creating a Future
+
+You can create a `Future` using the static method `Future.of`.
+
+```typescript
+import { Future } from '@leanmind/monads';
+
+const future = Future.of(() => Promise.resolve(42));
+```
+
+#### Mapping over a Future
+
+You can use the `map` or `flatMap` method to transform the computed value inside a `Future`. The operation will not
+execute the transformation (_lazy evaluation_) until `complete` method is called.
+
+##### Using `flatMap`
+
+```typescript
+import { Future } from '@leanmind/monads';
+
+const future = Future.of(() => Promise.resolve(42))
+  .flatMap(x => Future.of(() => Promise.resolve(x + 1)))
+  .complete(
+    x => console.log(x),
+    err => console.error(err)
+  ); // 43
+```
+
+##### Using `map`
+
+```typescript
+import { Future } from '@leanmind/monads';
+
+const future = Future.of(() => Promise.resolve(42))
+  .map(x => x + 1)
+  .complete(
+    x => console.log(x),
+    err => console.error(err)
+  ); // 43
+```
+
+#### Evaluate a Future
+
+You can evaluate a `Future` using the `complete` method. The `complete` method takes two functions as arguments:
+one for the success case and one for the failure case.
+
+```typescript
+import { Future } from '@leanmind/monads';
+
+const successFuture = Future.of(() => Promise.resolve(42));
+
+await successFuture.complete(
+  x => console.log(x),
+  err => console.error(err)
+); // 42
+
+const failureFuture = Future.of(() => Promise.reject(new Error('Error')));
+
+await failureFuture.complete(
+  x => console.log(x),
+  err => console.error(err)
+); // Error('Error')
 ```

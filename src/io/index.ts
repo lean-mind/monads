@@ -1,1 +1,1 @@
-export { IO } from './IO';
+export { IO } from './io';

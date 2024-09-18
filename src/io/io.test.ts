@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import { IO } from './IO';
+import { IO } from './io';
 
 describe('IO Monad', () => {
   it('should create IO monad correctly', () => {

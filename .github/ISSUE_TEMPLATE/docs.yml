@@ -1,0 +1,29 @@
+name: 📑 Request docs changes
+description: Propose changes and improvements to Docs.
+labels: ["docs"]
+title: "[DOCS] <description>"
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for contributing to Docs! 📑 👩🏻‍💻 We appreciate your feedback, ideas, and contributions.
+
+        Before filing this issue, please make sure to check if there's already a similar issue open in our [Issues Tracker](https://github.com/lean-mind/monads/issues?q=is%3Aopen+is%3Aissue+label%3Adocs).
+
+  - type: textarea
+    id: reason-context
+    attributes:
+      label: What Docs changes are you proposing?
+      description: Why do the Docs need this improvement? What is the motivation for this change? How will this change benefit our Open-Source community?
+      placeholder: "I would like to contribute to Docs by..."
+    validations:
+      required: true
+  - type: checkboxes
+    id: terms
+    attributes:
+      label: Code of Conduct
+      description: By submitting this issue, you agree to follow our [Code of Conduct](https://github.com/lean-mind/monads/blob/main/docs/CODE_OF_CONDUCT.md)
+      options:
+        - label: I agree to follow this project's Code of Conduct
+          required: true

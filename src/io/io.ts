@@ -8,13 +8,13 @@ class IO<T> implements Monad<T> {
   }
 
   flatMap<U>(transform: (value: T) => IO<U>): IO<U> {
-    return new IO(() => transform(this.description()).run());
+    return new IO(() => transform(this.description()).runUnsafe());
   }
   map<U>(transform: (value: T) => U): IO<U> {
     return new IO(() => transform(this.description()));
   }
 
-  run(): T {
+  runUnsafe(): T {
     return this.description();
   }
 }

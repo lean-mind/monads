@@ -1,7 +1,6 @@
 # monads
 
 This is a set of implementations of monads in TypeScript with OOP perspective.
-It is a work in progress and the first monad implemented is the Either monad.
 
 <!-- TOC -->
 * [monads](#monads)
@@ -475,7 +474,7 @@ The `IO` monad represents a computation that may have side effects.
 
 In this way, the `IO` monad is used to encapsulate side effects in a pure functional way.
 
-So, you can operate as pure functions until you call the `run` method.
+So, you can operate as pure functions until you call the `runUnsafe` method.
 
 ### Usage
 
@@ -492,7 +491,7 @@ const io = IO.of(() => 42);
 
 You can use the `flatMap` or `map` method to concatenate `IO` operations.
 
-The operation is not executed until you call the `run` method.
+The operation is not executed until you call the `runUnsafe` method.
 
 ##### Using `flatMap`
 
@@ -511,7 +510,7 @@ import { IO } from '@leanmind/monads';
 
 const io = IO.of(() => 42).map(x => x + 1);
 
-io.run(); // 43
+io.runUnsafe(); // 43
 ```
 
 

@@ -23,7 +23,7 @@ describe('IO Monad', () => {
 
   it('should execute the pipeline created with map operations', () => {
     const unsafeOperation = IO.of(() => 2).map((x) => x * 2);
-    expect(unsafeOperation.run()).toEqual(4);
+    expect(unsafeOperation.runUnsafe()).toEqual(4);
   });
 
   it('should not execute any side-effect during flatMap operations', () => {
@@ -38,6 +38,6 @@ describe('IO Monad', () => {
 
   it('should execute the pipeline created with flatMap operations', () => {
     const unsafeOperation = IO.of(() => 2).flatMap((x) => IO.of(() => x * 2));
-    expect(unsafeOperation.run()).toEqual(4);
+    expect(unsafeOperation.runUnsafe()).toEqual(4);
   });
 });

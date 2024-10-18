@@ -1,21 +1,21 @@
 import { Monad } from '../monad';
 
 /**
- * Class representing an IO monad, which encapsulates a side-effectful computation description.
+ * Class representing an IO monad, which encapsulates a computation description that may produce a side effect.
  * @template T The type of the value produced by the IO computation.
  */
 class IO<T> implements Monad<T> {
   /**
    * Creates a new `IO` instance.
-   * @param {() => T} description The side-effectful computation.
+   * @param {() => T} description The computation.
    * @private
    */
   private constructor(private description: () => T) {}
 
   /**
-   * Creates an `IO` instance from a side-effectful computation.
+   * Creates an `IO` instance from a computation that may produce a side effect.
    * @template T The type of the value produced by the IO computation.
-   * @param {() => T} sideEffect The side-effectful computation.
+   * @param {() => T} sideEffect The computation.
    * @returns {IO<T>} A new `IO` instance.
    * @example
    * const io = IO.of(() => console.log('Hello, World!'));
@@ -52,8 +52,8 @@ class IO<T> implements Monad<T> {
   }
 
   /**
-   * Executes the side-effectful computation and returns the result.
-   * @returns {T} The result of the side-effectful computation.
+   * Executes the computation and returns the result.
+   * @returns {T} The result of the computation.
    * @example
    * const io = IO.of(() => 5);
    * console.log(io.runUnsafe()); // 5

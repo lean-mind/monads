@@ -92,7 +92,7 @@ abstract class Option<T> implements Monad<T>, Matchable<T, undefined> {
   abstract flatMap<U>(transform: (value: T) => Option<U>): Option<U>;
 
   /**
-   * Matches the value or absence of value contained in this `Option` instance.
+   * Unwraps the value contained in this `Option` instance by applying the appropriate handler for both Some and None cases.
    * @template U The type of the result.
    * @param {(value: T) => U} ifSome The function to call if this is a `Some` instance.
    * @param {(_: undefined) => U} ifNone The function to call if this is a `None` instance.

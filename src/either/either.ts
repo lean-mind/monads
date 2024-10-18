@@ -52,7 +52,7 @@ abstract class Either<L, R> implements Monad<R>, Matchable<R, L> {
   }
 
   /**
-   * Executes a function and returns an `Either` instance.
+   * Executes a function and returns an `Either` instance that can raise an Error.
    * @template T The type of the right value.
    * @param {() => T} execute The function to execute.
    * @returns {Either<Error, T>} A `Right` instance if the function executes without error, otherwise a `Left` instance.
@@ -113,7 +113,7 @@ abstract class Either<L, R> implements Monad<R>, Matchable<R, L> {
   abstract flatMapLeft<T>(transform: (l: L) => Either<T, R>): Either<T, R>;
 
   /**
-   * Matches the right or left value contained in this `Either` instance.
+   * Unwraps the value contained in this `Either` instance by applying the appropriate handler for both Left and Right cases.
    * @template T The type of the result.
    * @param {(r: R) => T} ifRight The function to call if this is a `Right` instance.
    * @param {(l: L) => T} ifLeft The function to call if this is a `Left` instance.

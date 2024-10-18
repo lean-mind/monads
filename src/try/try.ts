@@ -67,7 +67,7 @@ abstract class Try<T> implements Monad<T>, Matchable<T, Error> {
   abstract flatMap<U>(transform: (value: T) => Try<U>): Try<U>;
 
   /**
-   * Matches the value or error contained in this `Try` instance.
+   * Unwraps the value contained in this `Try` instance by applying the appropriate handler for both Success and Failure cases.
    * @template U The type of the result.
    * @param {(value: T) => U} ifSuccess The function to call if this is a `Success` instance.
    * @param {(error: Error) => U} ifFailure The function to call if this is a `Failure` instance.

@@ -129,7 +129,7 @@ abstract class Option<T> implements Monad<T>, Matchable<T, undefined> {
   abstract isNone(): this is None<T>;
 
   static ofNone() {
-    return null;
+    return new None();
   }
 }
 

@@ -26,6 +26,10 @@ abstract class Option<T> implements Monad<T>, Matchable<T, undefined> {
     return new Some(value);
   }
 
+  static ofSome<T>(value: T) {
+    return new Some(value);
+  }
+
   /**
    * Creates an `Option` instance from a `Matchable` instance.
    * @template T The type of the value.
@@ -123,10 +127,6 @@ abstract class Option<T> implements Monad<T>, Matchable<T, undefined> {
    * none.match(console.log, none => console.log(none.isNone())); // true
    */
   abstract isNone(): this is None<T>;
-
-  static ofSome(number: number) {
-
-  }
 }
 
 /**

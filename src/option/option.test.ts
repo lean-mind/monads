@@ -49,4 +49,9 @@ describe('Option monad', () => {
   ])('$type should handle isSome operation correctly', ({ option, expected }) => {
     expect(option.isSome()).toEqual(expected);
   });
+
+  it('should create a Some', () => {
+    const option = Option.ofSome(2);
+    expect(option).toEqual(new Some(2));
+  });
 });

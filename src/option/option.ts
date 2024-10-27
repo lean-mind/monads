@@ -26,8 +26,28 @@ abstract class Option<T> implements Monad<T>, Matchable<T, undefined> {
     return new Some(value);
   }
 
-  static ofSome<T>(value: T) {
+  /**
+   * Creates an `Option` instance from a value.
+   * @template T The type of the value.
+   * @param {Nullable<T>} value The nullable value.
+   * @returns {Some<T>} A `Some` instance of the value
+   * @example
+   * const some = Option.ofSome(5);
+   * some.match(console.log, () => console.log('none')); // 5
+   */
+  static ofSome<T>(value: T): Some<T> {
     return new Some(value);
+  }
+
+  /**
+   * Creates a `None` instance.
+   * @returns {None} A `None` instance.
+   * @example
+   * const none = Option.ofNone();
+   * none.match(console.log, () => console.log('none')); // none
+   */
+  static ofNone<T>(): None<T> {
+    return new None();
   }
 
   /**
@@ -127,10 +147,6 @@ abstract class Option<T> implements Monad<T>, Matchable<T, undefined> {
    * none.match(console.log, none => console.log(none.isNone())); // true
    */
   abstract isNone(): this is None<T>;
-
-  static ofNone() {
-    return new None();
-  }
 }
 
 /**

@@ -127,6 +127,10 @@ abstract class Option<T> implements Monad<T>, Matchable<T, undefined> {
    * none.match(console.log, none => console.log(none.isNone())); // true
    */
   abstract isNone(): this is None<T>;
+
+  static ofNone() {
+    return null;
+  }
 }
 
 /**

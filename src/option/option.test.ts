@@ -51,7 +51,10 @@ describe('Option monad', () => {
   });
 
   it('should create a Some', () => {
-    const option = Option.ofSome(2);
-    expect(option).toEqual(new Some(2));
+    expect(Option.ofSome(2)).toEqual(new Some(2));
+  });
+
+  it('should create a None', () => {
+    expect(Option.ofNone()).toEqual(new None());
   });
 });

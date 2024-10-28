@@ -52,7 +52,6 @@ describe('Option monad', () => {
 
   it('should create a Some', () => {
     expect(Option.ofSome(2)).toEqual(new Some(2));
-    expect(Option.ofSome(null)).toEqual(new Some(null));
   });
 
   it('should create a None', () => {

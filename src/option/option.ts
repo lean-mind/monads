@@ -32,10 +32,10 @@ abstract class Option<T> implements Monad<T>, Matchable<T, undefined> {
    * @param {NotNullable<T>} value The nullable value.
    * @returns {Some<T>} A `Some` instance of the value
    * @example
-   * const some = Option.ofSome(5);
+   * const some = Option.some(5);
    * some.match(console.log, () => console.log('none')); // 5
    */
-  static ofSome<T>(value: NotNullable<T>): Option<T> {
+  static some<T>(value: NotNullable<T>): Option<T> {
     return new Some(value);
   }
 
@@ -43,10 +43,10 @@ abstract class Option<T> implements Monad<T>, Matchable<T, undefined> {
    * Creates a `None` instance.
    * @returns {None} A `None` instance.
    * @example
-   * const none = Option.ofNone();
+   * const none = Option.none();
    * none.match(console.log, () => console.log('none')); // none
    */
-  static ofNone<T>(): Option<T> {
+  static none<T>(): Option<T> {
     return new None();
   }
 

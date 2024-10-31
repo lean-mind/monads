@@ -1,4 +1,4 @@
-import { NotNullable, Nullable } from '../types';
+import { Present, Nullable } from '../types';
 import { Monad } from '../monad';
 import { Matchable } from '../match';
 
@@ -29,13 +29,13 @@ abstract class Option<T> implements Monad<T>, Matchable<T, undefined> {
   /**
    * Creates an `Option` instance from a value.
    * @template T The type of the value.
-   * @param {NotNullable<T>} value The nullable value.
+   * @param {Present<T>} value The nullable value.
    * @returns {Some<T>} A `Some` instance of the value
    * @example
    * const some = Option.some(5);
    * some.match(console.log, () => console.log('none')); // 5
    */
-  static some<T>(value: NotNullable<T>): Option<T> {
+  static some<T>(value: Present<T>): Option<T> {
     return new Some(value);
   }
 

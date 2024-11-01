@@ -40,7 +40,7 @@ abstract class Try<T> implements Monad<T>, Matchable<T, Error> {
   static from<T>(matchable: Matchable<T, unknown>): Try<T> {
     return matchable.match<Try<T>>(
       (value: T) => new Success(value),
-      (error: unknown) => (error instanceof Error ? new Failure(error) : Failure.NO_ERROR_PROVIDED)
+      (error: unknown) => (error instanceof Error ? new Failure(error) : new Failure(new Error('No error provided')))
     );
   }
 
@@ -135,7 +135,7 @@ class Success<T> extends Try<T> {
  * Class representing a failed computation.
  * @template T The type of the value.
  */
-class Failure<T> extends Try<T> {
+class Failure<T = Error> extends Try<T> {
   /**
    * Creates a new `Failure` instance.
    * @param {Error} error The error of the failed computation.
@@ -148,7 +148,6 @@ class Failure<T> extends Try<T> {
    * A static instance representing a failure with no error provided.
    * @type {Failure<never>}
    */
-  static NO_ERROR_PROVIDED = new Failure<never>(new Error('No error provided'));
 
   map(_: (_: never) => never): Try<never> {
     return new Failure(this.error);

@@ -1,7 +1,7 @@
 {
   "name": "@leanmind/monads",
-  "main": "dist/index.js",
-  "module": "dist/index.esm.js",
+  "main": "dist/cjs/index.js",
+  "module": "dist/esm/index.js",
   "types": "dist/index.d.ts",
   "version": "0.0.0-semantically-released",
   "description": "A collection of monads implemented in TypeScript using object-oriented programming.",
@@ -13,7 +13,9 @@
   ],
   "scripts": {
     "analize": "npm run lint:fix && npm run compile",
-    "build": "npm run lint:fix && tsc",
+    "build": "npm run lint:fix && npm run compile:commonjs && npm run compile:esm",
+    "compile:commonjs": "tsc --outDir dist/cjs --module commonjs",
+    "compile:esm": "tsc --outDir dist/esm --module esnext",
     "compile": "tsc --noEmit",
     "compile:watch": "npm run compile -- --watch",
     "compile:build": "tsc -b",

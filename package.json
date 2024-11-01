@@ -9,7 +9,8 @@
     "functional-programming",
     "monads",
     "typescript",
-    "oop"
+    "oop",
+    "error-handling"
   ],
   "scripts": {
     "analize": "npm run lint:fix && npm run compile",

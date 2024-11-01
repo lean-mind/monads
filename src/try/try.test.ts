@@ -35,7 +35,7 @@ describe('Try monad', () => {
       typeMatchable: 'None',
       tryType: 'Failure',
       matchable: Option.of<number>(undefined),
-      expected: Failure.NO_ERROR_PROVIDED,
+      expected: new Failure(new Error('No error provided')),
     },
   ])('$tryType should be created from $typeMatchable', ({ matchable, expected }) => {
     expect(Try.from(matchable)).toEqual(expected);

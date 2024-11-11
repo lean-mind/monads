@@ -1,12 +1,14 @@
 import { Monad } from '../monad';
 import { Matchable } from '../match';
+import { Future } from '../future';
+import { Futurizable } from '../future/futurizable';
 
 /**
  * Abstract class representing a value that can be one of two possible types.
  * @template L The type of the left value.
  * @template R The type of the right value.
  */
-abstract class Either<L, R> implements Monad<R>, Matchable<R, L> {
+abstract class Either<L, R> implements Monad<R>, Matchable<R, L>, Futurizable<L | R> {
   /**
    * Creates a `Right` instance.
    * @template T The type of the right value.
@@ -141,6 +143,19 @@ abstract class Either<L, R> implements Monad<R>, Matchable<R, L> {
    * console.log(result.isRight()); // true
    */
   abstract isRight(): this is Right<L, R>;
+
+  /**
+   * Converts this `Either` instance into a `Future` instance.
+   * @returns {Future<L | R>} A `Future` instance containing the value.
+   * @example
+   * const result = Either.right(5);
+   * const asyncClosure: async (x: number) => x * 2
+   * result.toFuture().map(asyncClosure).complete(
+      async (value) => expect(await value).toEqual(expected), // 10
+      async (error) => expect(error).toBeUndefined()
+     );
+   */
+  abstract toFuture(): Future<L | R>;
 }
 
 /**
@@ -184,6 +199,10 @@ class Left<L, R> extends Either<L, R> {
   isRight(): this is Right<L, never> {
     return false;
   }
+
+  toFuture(): Future<L> {
+    return Future.of(() => Promise.resolve(this.value));
+  }
 }
 
 /**
@@ -226,6 +245,10 @@ class Right<L, R> extends Either<L, R> {
 
   isRight(): this is Right<never, R> {
     return true;
+  }
+
+  toFuture(): Future<R> {
+    return Future.of(() => Promise.resolve(this.value));
   }
 }
 

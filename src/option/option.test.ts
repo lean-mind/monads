@@ -49,4 +49,12 @@ describe('Option monad', () => {
   ])('$type should handle isSome operation correctly', ({ option, expected }) => {
     expect(option.isSome()).toEqual(expected);
   });
+
+  it('should create a Some', () => {
+    expect(Option.some(2)).toEqual(new Some(2));
+  });
+
+  it('should create a None', () => {
+    expect(Option.none()).toEqual(new None());
+  });
 });

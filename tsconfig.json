@@ -1,9 +1,6 @@
 {
   "compilerOptions": {
     "declaration": true,
-    "declarationDir": "./dist",
-    "outDir": "./dist",
-    "module": "ESNext",
     "target": "ESNext",
     "lib": ["ES2023"],
     "moduleResolution": "node",

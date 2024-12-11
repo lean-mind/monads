@@ -15,8 +15,8 @@
   "scripts": {
     "analize": "npm run lint:fix && npm run compile",
     "build": "npm run lint:fix && npm run compile:commonjs && npm run compile:esm",
-    "compile:commonjs": "tsc --outDir dist/cjs --module commonjs",
-    "compile:esm": "tsc --outDir dist/esm --module esnext",
+    "compile:commonjs": "tsc --project tsconfig.cjs.json",
+    "compile:esm": "tsc --project tsconfig.esm.json",
     "compile": "tsc --noEmit",
     "compile:watch": "npm run compile -- --watch",
     "compile:build": "tsc -b",

@@ -195,7 +195,7 @@ class Some<T> extends Option<T> {
   }
 
   toFuture(): Future<T> {
-    throw new Error('Method not implemented.');
+    return Future.of(() => Promise.resolve(this.value));
   }
 }
 
@@ -233,7 +233,7 @@ class None<T> extends Option<T> {
   }
 
   toFuture(): Future<T> {
-    throw new Error('Method not implemented.');
+    return Future.of(() => Promise.reject(new Error('No value provided')));
   }
 }
 

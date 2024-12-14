@@ -1,11 +1,14 @@
 import { Monad } from '../monad';
 import { Matchable } from '../match';
+import { Futurizable } from "../futurizable";
+import { Future } from '../future';
 
 /**
  * Abstract class representing a computation that may either result in a value or an error.
  * @template T The type of the value.
  */
-abstract class Try<T> implements Monad<T>, Matchable<T, Error> {
+abstract class Try<T> implements Monad<T>, Matchable<T, Error>, Futurizable<T> {
+
   /**
    * Executes a function and returns a `Try` instance.
    * @template T The type of the value.
@@ -95,6 +98,8 @@ abstract class Try<T> implements Monad<T>, Matchable<T, Error> {
    * result.match(console.log, error => console.error(error.isFailure()); // true
    */
   abstract isFailure(): this is Failure<T>;
+
+  abstract toFuture(): Future<T>;
 }
 
 /**
@@ -128,6 +133,10 @@ class Success<T> extends Try<T> {
 
   isFailure(): this is Failure<T> {
     return false;
+  }
+
+  toFuture(): Future<T> {
+    throw new Error('Method not implemented.');
   }
 }
 
@@ -167,6 +176,10 @@ class Failure<T = Error> extends Try<T> {
 
   isFailure(): this is Failure<T> {
     return true;
+  }
+
+  toFuture(): Future<T> {
+    throw new Error('Method not implemented.');
   }
 }
 

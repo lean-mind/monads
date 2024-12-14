@@ -1,12 +1,14 @@
 import { Present, Nullable } from '../types';
 import { Monad } from '../monad';
 import { Matchable } from '../match';
+import { Futurizable } from '../futurizable';
+import { Future } from '../future';
 
 /**
  * Abstract class representing an optional value.
  * @template T The type of the value.
  */
-abstract class Option<T> implements Monad<T>, Matchable<T, undefined> {
+abstract class Option<T> implements Monad<T>, Matchable<T, undefined>, Futurizable<T> {
   /**
    * Creates an `Option` instance from a nullable value.
    * @template T The type of the value.
@@ -147,6 +149,8 @@ abstract class Option<T> implements Monad<T>, Matchable<T, undefined> {
    * none.match(console.log, none => console.log(none.isNone())); // true
    */
   abstract isNone(): this is None<T>;
+
+  abstract toFuture(): Future<T>;
 }
 
 /**
@@ -189,6 +193,10 @@ class Some<T> extends Option<T> {
   isSome(): this is Some<T> {
     return true;
   }
+
+  toFuture(): Future<T> {
+    throw new Error('Method not implemented.');
+  }
 }
 
 /**
@@ -222,6 +230,10 @@ class None<T> extends Option<T> {
 
   isSome(): this is Some<T> {
     return false;
+  }
+
+  toFuture(): Future<T> {
+    throw new Error('Method not implemented.');
   }
 }
 

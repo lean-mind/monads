@@ -1,16 +1,19 @@
 import { Monad } from '../monad';
+import { Futurizable } from "../futurizable";
+import { Future } from '../future';
 
 /**
  * Class representing an IO monad, which encapsulates a computation description that may produce a side effect.
  * @template T The type of the value produced by the IO computation.
  */
-class IO<T> implements Monad<T> {
+class IO<T> implements Monad<T>, Futurizable<T> {
   /**
    * Creates a new `IO` instance.
    * @param {() => T} description The computation.
    * @private
    */
-  private constructor(private description: () => T) {}
+  private constructor(private description: () => T) {
+  }
 
   /**
    * Creates an `IO` instance from a computation that may produce a side effect.
@@ -60,6 +63,10 @@ class IO<T> implements Monad<T> {
    */
   runUnsafe(): T {
     return this.description();
+  }
+
+  toFuture(): Future<T> {
+    throw new Error('Method not implemented.');
   }
 }
 

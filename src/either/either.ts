@@ -1,14 +1,14 @@
 import { Monad } from '../monad';
 import { Matchable } from '../match';
 import { Future } from '../future';
-import { Futurizable } from '../future/futurizable';
+import { Futurizable } from '../futurizable';
 
 /**
  * Abstract class representing a value that can be one of two possible types.
  * @template L The type of the left value.
  * @template R The type of the right value.
  */
-abstract class Either<L, R> implements Monad<R>, Matchable<R, L>, Futurizable<L | R> {
+abstract class Either<L, R> implements Monad<R>, Matchable<R, L>, Futurizable<R> {
   /**
    * Creates a `Right` instance.
    * @template T The type of the right value.
@@ -155,7 +155,7 @@ abstract class Either<L, R> implements Monad<R>, Matchable<R, L>, Futurizable<L 
       async (error) => expect(error).toBeUndefined()
      );
    */
-  abstract toFuture(): Future<L | R>;
+  abstract toFuture(): Future<R>;
 }
 
 /**
@@ -200,8 +200,8 @@ class Left<L, R> extends Either<L, R> {
     return false;
   }
 
-  toFuture(): Future<L> {
-    return Future.of(() => Promise.resolve(this.value));
+  toFuture(): Future<never> {
+    return Future.of(() => Promise.reject(new Error(this.value?.toString() ?? 'Unknown error')));
   }
 }
 

@@ -1,6 +1,6 @@
 import { Monad } from '../monad';
 import { Matchable } from '../match';
-import { Futurizable } from "../futurizable";
+import { Futurizable } from '../futurizable';
 import { Future } from '../future';
 
 /**
@@ -8,7 +8,6 @@ import { Future } from '../future';
  * @template T The type of the value.
  */
 abstract class Try<T> implements Monad<T>, Matchable<T, Error>, Futurizable<T> {
-
   /**
    * Executes a function and returns a `Try` instance.
    * @template T The type of the value.

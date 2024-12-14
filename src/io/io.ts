@@ -1,5 +1,5 @@
 import { Monad } from '../monad';
-import { Futurizable } from "../futurizable";
+import { Futurizable } from '../futurizable';
 import { Future } from '../future';
 
 /**
@@ -12,8 +12,7 @@ class IO<T> implements Monad<T>, Futurizable<T> {
    * @param {() => T} description The computation.
    * @private
    */
-  private constructor(private description: () => T) {
-  }
+  private constructor(private description: () => T) {}
 
   /**
    * Creates an `IO` instance from a computation that may produce a side effect.
@@ -66,7 +65,16 @@ class IO<T> implements Monad<T>, Futurizable<T> {
   }
 
   toFuture(): Future<T> {
-    throw new Error('Method not implemented.');
+    return Future.of(
+      () =>
+        new Promise<T>((resolve, reject) => {
+          try {
+            resolve(this.runUnsafe());
+          } catch (error) {
+            reject(error);
+          }
+        })
+    );
   }
 }
 

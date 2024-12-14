@@ -8,7 +8,7 @@ describe('Future monad', () => {
       action: () => Promise.resolve(2),
       expected: {
         ifSuccess: (value: number) => expect(value).toBe(2),
-        ifFailure: (_) => assert.fail('Error should not be thrown'),
+        ifFailure: (_: Error) => assert.fail('Error should not be thrown'),
       },
     },
     {
@@ -30,7 +30,7 @@ describe('Future monad', () => {
       future: Future.of(() => Promise.resolve(2)),
       expected: {
         ifSuccess: (value: number) => expect(value).toBe(4),
-        ifFailure: (_) => assert.fail('Error should not be thrown'),
+        ifFailure: (_: Error) => assert.fail('Error should not be thrown'),
       },
     },
     {

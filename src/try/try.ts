@@ -136,7 +136,7 @@ class Success<T> extends Try<T> {
   }
 
   toFuture(): Future<T> {
-    throw new Error('Method not implemented.');
+    return Future.of(() => Promise.resolve(this.value));
   }
 }
 
@@ -179,7 +179,7 @@ class Failure<T = Error> extends Try<T> {
   }
 
   toFuture(): Future<T> {
-    throw new Error('Method not implemented.');
+    return Future.of(() => Promise.reject(this.error));
   }
 }
 

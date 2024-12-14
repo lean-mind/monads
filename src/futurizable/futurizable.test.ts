@@ -15,7 +15,7 @@ describe('Futurizable', () => {
   ] as { monad: Futurizable<unknown>; monadType: string }[];
 
   it.each(testCasesWhereValueShouldBeCompletableWithOnSuccessClosure)(
-    `should resolve the future value of converted async $monadType using onSuccess closure`,
+    `should complete the future value of converted async $monadType using onSuccess closure`,
     async ({ monad }) => {
       const onFailureClosureDummy = vi.fn();
       const onSuccessClosureSpy = vi.fn();
@@ -55,7 +55,7 @@ describe('Futurizable', () => {
   ] as { monad: Futurizable<unknown>; monadType: string; expectedEdgeCasePassedToOnFailureClosure: Error }[];
 
   it.each(testCasesWhereErrorShouldBeCompletableWithOnFailureClosure)(
-    `should reject the future value of converted async $monadType using onFailure closure`,
+    `should complete the future value of converted async $monadType using onFailure closure`,
     async ({ monad, expectedEdgeCasePassedToOnFailureClosure }) => {
       const onSuccessClosureDummy = vi.fn();
       const onFailureClosureSpy = vi.fn();

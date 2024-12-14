@@ -146,14 +146,15 @@ abstract class Either<L, R> implements Monad<R>, Matchable<R, L>, Futurizable<R>
 
   /**
    * Converts this `Either` instance into a `Future` instance.
-   * @returns {Future<L | R>} A `Future` instance containing the value.
+   * @returns {Future<R>} A `Future` instance containing the value.
    * @example
-   * const result = Either.right(5);
-   * const asyncClosure: async (x: number) => x * 2
-   * result.toFuture().map(asyncClosure).complete(
-      async (value) => expect(await value).toEqual(expected), // 10
-      async (error) => expect(error).toBeUndefined()
-     );
+   * const either = Either.right(5);
+   * const future = either.toFuture();
+   * asyncEither.complete(console.log, console.error); // 5
+   * @example
+   * const either = Either.left('error');
+   * const future = either.toFuture();
+   * asyncEither.complete(console.log, console.error); // Error: error
    */
   abstract toFuture(): Future<R>;
 }

@@ -150,6 +150,19 @@ abstract class Option<T> implements Monad<T>, Matchable<T, undefined>, Futurizab
    */
   abstract isNone(): this is None<T>;
 
+  /**
+   * Converts this `Option` instance into a `Future` instance.
+   * @returns {Future<T>} A new `Future` instance.
+   * @example
+   * const some = Option.of(5);
+   * const future = some.toFuture();
+   * future.complete(console.log, console.error); // 5
+   *
+   * @example
+   * const none = Option.of(null);
+   * const future = none.toFuture();
+   * future.complete(console.log, console.error); // Error: No value provided
+   */
   abstract toFuture(): Future<T>;
 }
 

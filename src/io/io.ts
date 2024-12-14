@@ -64,6 +64,18 @@ class IO<T> implements Monad<T>, Futurizable<T> {
     return this.description();
   }
 
+  /**
+   * Converts this `IO` instance into a `Future` instance.
+   * @returns {Future<T>} A new `Future` instance.
+   * @example
+   * const io = IO.of(() => 5);
+   * const future = io.toFuture();
+   * future.complete(console.log, console.error); // 5
+   * @example
+   * const io = IO.of(() => {throw new Error('error')});
+   * const future = io.toFuture();
+   * future.complete(console.log, console.error); // Error: error
+   */
   toFuture(): Future<T> {
     return Future.of(
       () =>

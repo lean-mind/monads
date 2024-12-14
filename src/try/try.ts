@@ -99,6 +99,18 @@ abstract class Try<T> implements Monad<T>, Matchable<T, Error>, Futurizable<T> {
    */
   abstract isFailure(): this is Failure<T>;
 
+  /**
+   * Converts this `Try` instance into a `Future` instance.
+   * @returns {Future<T>} A new `Future` instance.
+   * @example
+   * const result = Try.execute(() => 5);
+   * const future = result.toFuture();
+   * future.complete(console.log, console.error); // 5
+   * @example
+   * const result = Try.execute(() => { throw new Error('failure'); });
+   * const future = result.toFuture();
+   * future.complete(console.log, console.error); // Error: failure
+   */
   abstract toFuture(): Future<T>;
 }
 

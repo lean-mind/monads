@@ -1,11 +1,10 @@
 import { Monad } from '../monad';
-import { Completable } from '../complete';
 
 /**
  * Class representing a future computation that will produce a value or an error.
  * @template T The type of the value produced by the future computation.
  */
-class Future<T> implements Monad<T>, Completable<T> {
+class Future<T> implements Monad<T> {
   /**
    * Creates a new `Future` instance.
    * @param {() => Promise<T>} action The asynchronous action to be performed.

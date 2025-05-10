@@ -66,4 +66,20 @@ describe('Try monad', () => {
   ])('$type should handle isSuccess operation correctly', ({ tryMonad, expected }) => {
     expect(tryMonad.isSuccess()).toEqual(expected);
   });
+
+  it('should retrieve the value from Success', () => {
+    const success = Try.success(2);
+    expect(success.getOrThrow()).toEqual(2);
+    expect(success.getOrElse(3)).toEqual(2);
+  });
+
+  it('should throw an error when retrieving the value from Failure', () => {
+    const failure = Try.failure(new Error('An error occurred'));
+    expect(() => failure.getOrThrow()).toThrowError(new Error('An error occurred'));
+  });
+
+  it('should retrieve a default value from Failure', () => {
+    const failure = Try.failure(new Error('An error occurred'));
+    expect(failure.getOrElse(3)).toEqual(3);
+  });
 });

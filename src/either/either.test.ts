@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { Either } from './either';
 import { Option } from '../option';
 
@@ -83,5 +83,25 @@ describe('Either monad', () => {
     { type: 'Left', either: Either.left('Error'), expected: false },
   ])('$type should handle isRight operation correctly', ({ either, expected }) => {
     expect(either.isRight()).toEqual(expected);
+  });
+
+  it('should execute an action if the Either is a Right', () => {
+    const action = vi.fn();
+    Either.right(2).onRight(action);
+    expect(action).toHaveBeenCalledWith(2);
+
+    const nonCallableAction = vi.fn();
+    Either.left(2).onRight(nonCallableAction);
+    expect(nonCallableAction).not.toHaveBeenCalled();
+  });
+
+  it('should execute an action if the Either is a Left', () => {
+    const action = vi.fn();
+    Either.left(2).onLeft(action);
+    expect(action).toHaveBeenCalledWith(2);
+
+    const nonCallableAction = vi.fn();
+    Either.right(2).onLeft(nonCallableAction);
+    expect(nonCallableAction).not.toHaveBeenCalled();
   });
 });

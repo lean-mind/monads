@@ -1,4 +1,4 @@
-import { Present, Nullable } from '../types';
+import { Nullable, Present } from '../types';
 import { Monad } from '../monad';
 import { Matchable } from '../match';
 import { Futurizable } from '../futurizable';
@@ -97,6 +97,7 @@ abstract class Option<T> implements Monad<T>, Matchable<T, undefined>, Futurizab
 
   /**
    * Transforms the value contained in this `Option` instance.
+   * @template T The type of the value.
    * @template U The type of the transformed value.
    * @param {(value: T) => U} transform The transformation function.
    * @returns {Option<U>} A new `Option` instance containing the transformed value.
@@ -108,6 +109,7 @@ abstract class Option<T> implements Monad<T>, Matchable<T, undefined>, Futurizab
 
   /**
    * Transforms the value contained in this `Option` instance into another `Option` instance.
+   * @template T The type of the value.
    * @template U The type of the transformed value.
    * @param {(value: T) => Option<U>} transform The transformation function.
    * @returns {Option<U>} The result of the transformation function.
@@ -118,7 +120,27 @@ abstract class Option<T> implements Monad<T>, Matchable<T, undefined>, Futurizab
   abstract flatMap<U>(transform: (value: T) => Option<U>): Option<U>;
 
   /**
+   * Executes an action if this is a `Some` instance.
+   * @template T The type of the value.
+   * @param {(value: T) => void} action The action to execute if this is a `Some` instance.
+   * @returns {Option<T>} The current `Option` instance.
+   * @example
+   * const result = Option.some(5).onSome(value => console.log(value)); // 5
+   */
+  abstract onSome(action: (value: T) => void): Option<T>;
+
+  /**
+   * Executes an action if this is a `None` instance.
+   * @param {() => void} action The action to execute if this is a `None` instance.
+   * @returns {Option<T>} The current `Option` instance.
+   * @example
+   * const result = Option.none().onNone(() => console.log('none')); // none
+   */
+  abstract onNone(action: () => void): Option<T>;
+
+  /**
    * Unwraps the value contained in this `Option` instance by applying the appropriate handler for both Some and None cases.
+   * @template T The type of the value.
    * @template U The type of the result.
    * @param {(value: T) => U} ifSome The function to call if this is a `Some` instance.
    * @param {(_: undefined) => U} ifNone The function to call if this is a `None` instance.
@@ -195,6 +217,15 @@ class Some<T> extends Option<T> {
     return transform(this.value);
   }
 
+  onSome(action: (value: T) => void): Option<T> {
+    action(this.value);
+    return this;
+  }
+
+  onNone(_: () => void): Option<T> {
+    return this;
+  }
+
   match<U>(some: (value: T) => U, _: (_: never) => never): U {
     return some(this.value);
   }
@@ -231,6 +262,15 @@ class None<T> extends Option<T> {
 
   flatMap<U>(_: (value: T) => Option<U>): Option<U> {
     return new None();
+  }
+
+  onSome(_: (value: T) => void): Option<T> {
+    return this;
+  }
+
+  onNone(action: () => void): Option<T> {
+    action();
+    return this;
   }
 
   match<U>(_: (_: never) => never, none: (noneValue: undefined) => U): U {

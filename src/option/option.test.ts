@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { None, Option, Some } from './option';
 import { Either } from '../either';
 
@@ -56,5 +56,25 @@ describe('Option monad', () => {
 
   it('should create a None', () => {
     expect(Option.none()).toEqual(new None());
+  });
+
+  it('should execute an action if is a Some', () => {
+    const action = vi.fn();
+    Option.some(2).onSome(action);
+    expect(action).toHaveBeenCalledWith(2);
+
+    const nonCallableAction = vi.fn();
+    Option.none().onSome(nonCallableAction);
+    expect(nonCallableAction).not.toHaveBeenCalled();
+  });
+
+  it('should execute an action if is a None', () => {
+    const action = vi.fn();
+    Option.none().onNone(action);
+    expect(action).toHaveBeenCalled();
+
+    const nonCallableAction = vi.fn();
+    Option.some(2).onNone(nonCallableAction);
+    expect(nonCallableAction).not.toHaveBeenCalled();
   });
 });

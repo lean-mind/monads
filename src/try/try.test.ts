@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { Failure, Success, Try } from './try';
 import { Either } from '../either';
 import { Option } from '../option';
@@ -81,5 +81,25 @@ describe('Try monad', () => {
   it('should retrieve a default value from Failure', () => {
     const failure = Try.failure(new Error('An error occurred'));
     expect(failure.getOrElse(3)).toEqual(3);
+  });
+
+  it('should execute an action if is a Success', () => {
+    const action = vi.fn();
+    Try.success(2).onSuccess(action);
+    expect(action).toHaveBeenCalledWith(2);
+
+    const nonCallableAction = vi.fn();
+    Try.failure(new Error('error')).onSuccess(nonCallableAction);
+    expect(nonCallableAction).not.toHaveBeenCalled();
+  });
+
+  it('should execute an action if is a Failure', () => {
+    const action = vi.fn();
+    Try.failure(new Error('error')).onFailure(action);
+    expect(action).toHaveBeenCalledWith(new Error('error'));
+
+    const nonCallableAction = vi.fn();
+    Try.success(2).onFailure(nonCallableAction);
+    expect(nonCallableAction).not.toHaveBeenCalled();
   });
 });

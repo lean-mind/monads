@@ -31,6 +31,7 @@ This is a set of implementations of monads in TypeScript with OOP perspective.
     * [Usage](#usage-2)
     * [Using `map`](#using-map-1)
     * [Using `flatMap`](#using-flatmap-1)
+    * [Running side effects](#running-side-effects-1)
     * [Retrieving the value](#retrieving-the-value)
     * [Matching a Try](#matching-a-try)
     * [Handling errors in Infrastructure code](#handling-errors-in-infrastructure-code)
@@ -374,6 +375,26 @@ You can use the `flatMap` method to transform the value inside a `Success` with 
 import { Try } from '@leanmind/monads';
 
 const success = Try.success(42).flatMap(x => Try.success(x + 1)); // Success(43)
+```
+
+### Running side effects
+
+You can use the `onSuccess` method to run side effects on the value inside a `Success`.
+
+```typescript
+import { Try } from '@leanmind/monads';
+
+const succcess = Try.succcess(42).onSuccess(x => console.log(x)); // 42
+const failure = Try.failure('Error').onSuccess(x => console.log(x)); // No execution
+```
+
+Or you can use the `onFailure` method to run side effects on the value inside a `Failure`.
+
+```typescript
+import { Try } from '@leanmind/monads';
+
+const succcess = Try.succcess(42).onFailure(err => console.log(err)); // No execution
+const failure = Try.failure(new Error('Error')).onFailure(err => console.log(err)); // Error('Error')
 ```
 
 ### Retrieving the value

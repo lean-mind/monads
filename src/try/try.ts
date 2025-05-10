@@ -97,6 +97,26 @@ abstract class Try<T> implements Monad<T>, Matchable<T, Error>, Futurizable<T> {
   abstract flatMap<U>(transform: (value: T) => Try<U>): Try<U>;
 
   /**
+   * Executes an action if this is a `Success` instance.
+   * @template T The type of the value.
+   * @param {(r: T) => void} action The action to execute if this is a `Success` instance.
+   * @returns {Try<T>} The current `Try` instance.
+   * @example
+   * const result = Try.execute(() => 5).onSuccess(value => console.log(value)); // 5
+   */
+  abstract onSuccess(action: (value: T) => void): Try<T>;
+
+  /**
+   * Executes an action if this is a `Failure` instance.
+   * @template T The type of the value.
+   * @param {(error: Error) => void} action The action to execute if this is a `Failure` instance.
+   * @returns {Try<T>} The current `Try` instance.
+   * @example
+   * const result = Try.execute(() => { throw new Error('failure'); }).onFailure(error => console.error(error.message)); // failure
+   */
+  abstract onFailure(action: (error: Error) => void): Try<T>;
+
+  /**
    * Unwraps the value contained in this `Try` instance by applying the appropriate handler for both Success and Failure cases.
    * @template T The type of the value.
    * @template U The type of the result.
@@ -189,6 +209,15 @@ class Success<T> extends Try<T> {
     return transform(this.value);
   }
 
+  onSuccess(action: (value: T) => void): Try<T> {
+    action(this.value);
+    return this;
+  }
+
+  onFailure(_: (error: Error) => void): Try<T> {
+    return this;
+  }
+
   match<U>(ifSuccess: (value: T) => U, _: (_: never) => U): U {
     return ifSuccess(this.value);
   }
@@ -238,6 +267,15 @@ class Failure<T = Error> extends Try<T> {
 
   flatMap(_: (_: never) => Try<never>): Try<never> {
     return new Failure(this.error);
+  }
+
+  onSuccess(_: (value: T) => void): Try<T> {
+    return this;
+  }
+
+  onFailure(action: (error: Error) => void): Try<T> {
+    action(this.error);
+    return this;
   }
 
   match<U>(_: (_: never) => never, ifFailure: (error: Error) => U): U {

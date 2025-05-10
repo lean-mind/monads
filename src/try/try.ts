@@ -26,6 +26,32 @@ abstract class Try<T> implements Monad<T>, Matchable<T, Error>, Futurizable<T> {
   }
 
   /**
+   * Creates a `Success` instance.
+   * @template T The type of the value.
+   * @param {T} value The value of the successful computation.
+   * @returns {Success<T>} A `Success` instance containing the value.
+   * @example
+   * const success = Try.success(5);
+   * success.match(console.log, error => console.error(error.message)); // 5
+   */
+  static success<T>(value: T): Try<T> {
+    return new Success(value);
+  }
+
+  /**
+   * Creates a `Failure` instance.
+   * @template T The type of the value.
+   * @param {Error} error The error of the failed computation.
+   * @returns {Failure<T>} A `Failure` instance containing the error.
+   * @example
+   * const failure = Try.failure(new Error('An error occurred'));
+   * failure.match(console.log, error => console.error(error.message)); // An error occurred
+   */
+  static failure<T>(error: Error): Try<T> {
+    return new Failure(error);
+  }
+
+  /**
    * Creates a `Try` instance from a `Matchable` instance.
    * @template T The type of the value.
    * @param {Matchable<T, unknown>} matchable The matchable instance.
@@ -48,6 +74,7 @@ abstract class Try<T> implements Monad<T>, Matchable<T, Error>, Futurizable<T> {
 
   /**
    * Transforms the value contained in this `Try` instance.
+   * @template T The type of the value.
    * @template U The type of the transformed value.
    * @param {(value: T) => U} transform The transformation function.
    * @returns {Try<U>} A new `Try` instance containing the transformed value.
@@ -59,6 +86,7 @@ abstract class Try<T> implements Monad<T>, Matchable<T, Error>, Futurizable<T> {
 
   /**
    * Transforms the value contained in this `Try` instance into another `Try` instance.
+   * @template T The type of the value.
    * @template U The type of the transformed value.
    * @param {(value: T) => Try<U>} transform The transformation function.
    * @returns {Try<U>} The result of the transformation function.
@@ -70,6 +98,7 @@ abstract class Try<T> implements Monad<T>, Matchable<T, Error>, Futurizable<T> {
 
   /**
    * Unwraps the value contained in this `Try` instance by applying the appropriate handler for both Success and Failure cases.
+   * @template T The type of the value.
    * @template U The type of the result.
    * @param {(value: T) => U} ifSuccess The function to call if this is a `Success` instance.
    * @param {(error: Error) => U} ifFailure The function to call if this is a `Failure` instance.
@@ -97,6 +126,32 @@ abstract class Try<T> implements Monad<T>, Matchable<T, Error>, Futurizable<T> {
    * result.match(console.log, error => console.error(error.isFailure()); // true
    */
   abstract isFailure(): this is Failure<T>;
+
+  /**
+   * Retrieves the value contained in this `Try` instance or a default value if this is a `Failure` instance.
+   * @param {T} value The default value to return if this is a `Failure` instance.
+   * @returns {T} The value contained in this `Try` instance or the default value.
+   * @example
+   * const result = Try.execute(() => 5);
+   * console.log(result.getOrElse(0)); // 5
+   *
+   * const failure = Try.execute(() => { throw new Error('failure'); });
+   * console.log(failure.getOrElse(0)); // 0
+   */
+  abstract getOrElse(value: T): T;
+
+  /**
+   * Retrieves the value contained in this `Try` instance.
+   * @returns {T} The value contained in this `Try` instance.
+   * @throws {Error} If this is a `Failure` instance.
+   * @example
+   * const result = Try.execute(() => 5);
+   * console.log(result.getOrThrow()); // 5
+   *
+   * const failure = Try.execute(() => { throw new Error('failure'); });
+   * console.log(failure.getOrThrow()); // Error: failure
+   */
+  abstract getOrThrow(): T;
 
   /**
    * Converts this `Try` instance into a `Future` instance.
@@ -146,6 +201,14 @@ class Success<T> extends Try<T> {
     return false;
   }
 
+  getOrElse(_: T): T {
+    return this.value;
+  }
+
+  getOrThrow(): T {
+    return this.value;
+  }
+
   toFuture(): Future<T> {
     return Future.of(() => Promise.resolve(this.value));
   }
@@ -187,6 +250,14 @@ class Failure<T = Error> extends Try<T> {
 
   isFailure(): this is Failure<T> {
     return true;
+  }
+
+  getOrElse(value: T): T {
+    return value;
+  }
+
+  getOrThrow(): T {
+    throw this.error;
   }
 
   toFuture(): Future<T> {

@@ -12,6 +12,7 @@ This is a set of implementations of monads in TypeScript with OOP perspective.
       * [Mapping over an Either](#mapping-over-an-either)
         * [Using `flatMap` and `flatMapLeft`](#using-flatmap-and-flatmapleft)
         * [Using `map` and `mapLeft`](#using-map-and-mapleft)
+    * [Running side effects](#running-side-effects)
       * [Matching an Either](#matching-an-either)
       * [checking if an Either is Right or Left](#checking-if-an-either-is-right-or-left)
       * [Chaining operations](#chaining-operations)
@@ -119,6 +120,26 @@ import { Either } from '@leanmind/monads';
 
 const right = Either.right(42).map(x => x + 1); // Right(43)
 const left = Either.left('Error').mapLeft(err => `New ${err}`); // Left('New Error')
+```
+
+### Running side effects
+
+You can use the `onRight` method to run side effects on the value inside a `Right`.
+
+```typescript
+import { Either } from '@leanmind/monads';
+
+const right = Either.right(42).onRight(x => console.log(x)); // 42
+const left = Either.left('Error').onRight(x => console.log(x)); // No execution
+```
+
+Or you can use the `onLeft` method to run side effects on the value inside a `Left`.
+
+```typescript
+import { Either } from '@leanmind/monads';
+
+const right = Either.right(42).onLeft(err => console.log(err)); // No execution
+const left = Either.left('Error').onLeft(err => console.log(err)); // 'Error'
 ```
 
 #### Matching an Either

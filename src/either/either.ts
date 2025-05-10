@@ -72,6 +72,7 @@ abstract class Either<L, R> implements Monad<R>, Matchable<R, L>, Futurizable<R>
 
   /**
    * Transforms the right value contained in this `Either` instance.
+   * @template R The type of the right value.
    * @template T The type of the transformed value.
    * @param {(r: R) => T} transform The transformation function.
    * @returns {Either<L, T>} A new `Either` instance containing the transformed value.
@@ -83,7 +84,9 @@ abstract class Either<L, R> implements Monad<R>, Matchable<R, L>, Futurizable<R>
 
   /**
    * Transforms the left value contained in this `Either` instance.
+   * @template L The type of the left value.
    * @template T The type of the transformed value.
+   * @template R The type of the right value.
    * @param {(l: L) => T} transform The transformation function.
    * @returns {Either<T, R>} A new `Either` instance containing the transformed value.
    * @example
@@ -94,6 +97,7 @@ abstract class Either<L, R> implements Monad<R>, Matchable<R, L>, Futurizable<R>
 
   /**
    * Transforms the right value contained in this `Either` instance into another `Either` instance.
+   * @template R The type of the right value.
    * @template T The type of the transformed value.
    * @param {(r: R) => Either<L, T>} transform The transformation function.
    * @returns {Either<L, T>} The result of the transformation function.
@@ -105,7 +109,9 @@ abstract class Either<L, R> implements Monad<R>, Matchable<R, L>, Futurizable<R>
 
   /**
    * Transforms the left value contained in this `Either` instance into another `Either` instance.
+   * @template L The type of the left value.
    * @template T The type of the transformed value.
+   * @template R The type of the right value.
    * @param {(l: L) => Either<T, R>} transform The transformation function.
    * @returns {Either<T, R>} The result of the transformation function.
    * @example
@@ -115,7 +121,31 @@ abstract class Either<L, R> implements Monad<R>, Matchable<R, L>, Futurizable<R>
   abstract flatMapLeft<T>(transform: (l: L) => Either<T, R>): Either<T, R>;
 
   /**
+   * Executes an action if this is a `Right` instance.
+   * @template L The type of the left value.
+   * @template R The type of the right value.
+   * @param {(r: R) => void} action The action to execute if this is a `Right` instance.
+   * @returns {Either<L, R>} The current `Either` instance.
+   * @example
+   * const result = Either.right(5).onRight(value => console.log(value)); // prints 5
+   */
+  abstract onRight(action: (r: R) => void): Either<L, R>;
+
+  /**
+   * Executes an action if this is a `Left` instance.
+   * @template L The type of the left value.
+   * @template R The type of the right value.
+   * @param {(l: L) => void} action The action to execute if this is a `Left` instance.
+   * @returns {Either<L, R>} The current `Either` instance.
+   * @example
+   * const result = Either.left('error').onLeft(value => console.error(value)); // prints 'error'
+   */
+  abstract onLeft(action: (l: L) => void): Either<L, R>;
+
+  /**
    * Unwraps the value contained in this `Either` instance by applying the appropriate handler for both Left and Right cases.
+   * @template R The type of the right value.
+   * @template L The type of the left value.
    * @template T The type of the result.
    * @param {(r: R) => T} ifRight The function to call if this is a `Right` instance.
    * @param {(l: L) => T} ifLeft The function to call if this is a `Left` instance.
@@ -189,6 +219,15 @@ class Left<L, R> extends Either<L, R> {
     return transform(this.value);
   }
 
+  onRight(_: (r: never) => void): Either<L, never> {
+    return new Left(this.value);
+  }
+
+  onLeft(action: (l: L) => void): Either<L, never> {
+    action(this.value);
+    return new Left(this.value);
+  }
+
   match<T>(_: (_: never) => never, ifLeft: (l: L) => T): T {
     return ifLeft(this.value);
   }
@@ -233,6 +272,15 @@ class Right<L, R> extends Either<L, R> {
   }
 
   flatMapLeft(_: (l: never) => Either<never, R>): Either<never, R> {
+    return new Right(this.value);
+  }
+
+  onRight(action: (r: R) => void): Either<never, R> {
+    action(this.value);
+    return new Right(this.value);
+  }
+
+  onLeft(_: (l: never) => void): Either<never, R> {
     return new Right(this.value);
   }
 

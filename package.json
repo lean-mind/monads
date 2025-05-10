@@ -2,7 +2,7 @@
   "name": "@leanmind/monads",
   "main": "dist/cjs/index.js",
   "module": "dist/esm/index.js",
-  "types": "dist/index.d.ts",
+  "types": "dist/types/index.d.ts",
   "version": "0.0.0-semantically-released",
   "description": "A collection of monads implemented in TypeScript using object-oriented programming.",
   "keywords": [

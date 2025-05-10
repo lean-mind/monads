@@ -25,13 +25,14 @@ This is a set of implementations of monads in TypeScript with OOP perspective.
       * [Mapping over an Option](#mapping-over-an-option)
         * [Using `flatMap`](#using-flatmap)
         * [Using `map`](#using-map)
+    * [Running side effects](#running-side-effects-1)
       * [Matching an Option](#matching-an-option)
       * [Checking if an Option is Some or None](#checking-if-an-option-is-some-or-none)
   * [Try Monad](#try-monad)
     * [Usage](#usage-2)
     * [Using `map`](#using-map-1)
     * [Using `flatMap`](#using-flatmap-1)
-    * [Running side effects](#running-side-effects-1)
+    * [Running side effects](#running-side-effects-2)
     * [Retrieving the value](#retrieving-the-value)
     * [Matching a Try](#matching-a-try)
     * [Handling errors in Infrastructure code](#handling-errors-in-infrastructure-code)
@@ -293,6 +294,26 @@ import { Option } from '@leanmind/monads';
 
 const some = Option.of(42).map(x => x + 1); // Some(43)
 const none = Option.of(null).map(x => x + 1); // None
+```
+
+### Running side effects
+
+You can use the `onSome` method to run side effects on the value inside a `Some`.
+
+```typescript
+import { Option } from '@leanmind/monads';
+
+const some = Option.some(42).onSome(x => console.log(x)); // 42
+const none = Option.none().onSome(x => console.log(x)); // No execution
+```
+
+Or you can use the `onNone` method to run side effects on the value inside a `None`.
+
+```typescript
+import { Option } from '@leanmind/monads';
+
+const some = Option.some(42).onNone(_ => console.log('Empty value')); // No execution
+const none = Option.none().onNone(_ => console.log('Empty value')); // 'Empty value'
 ```
 
 #### Matching an Option

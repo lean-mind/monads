@@ -30,6 +30,7 @@ This is a set of implementations of monads in TypeScript with OOP perspective.
     * [Usage](#usage-2)
     * [Using `map`](#using-map-1)
     * [Using `flatMap`](#using-flatmap-1)
+    * [Retrieving the value](#retrieving-the-value)
     * [Matching a Try](#matching-a-try)
     * [Handling errors in Infrastructure code](#handling-errors-in-infrastructure-code)
     * [Checking if a Try is Success or Failure](#checking-if-a-try-is-success-or-failure)
@@ -312,7 +313,17 @@ The `Try` monad represents a computation that may fail.
 
 ### Usage
 
-You can create a `Try` using the static method `Try.execute`.
+you can create a `Try` using the static method `Try.success` or `Try.failure`.
+
+```typescript
+import { Try } from '@leanmind/monads';
+
+const success = Try.success(42); // Success(42)
+
+const failure = Try.failure(new Error('Error')); // Failure(Error('Error'))
+```
+
+Also, you can create a `Try` using the static method `Try.execute` from a function that may throw an exception.
 
 ```typescript
 import { Try } from '@leanmind/monads';
@@ -331,7 +342,7 @@ You can use the `map` method to transform the value inside a `Success`.
 ```typescript
 import { Try } from '@leanmind/monads';m
 
-const success = Try.execute(() => 42).map(x => x + 1); // Success(43)
+const success = Try.success(42).map(x => x + 1); // Success(43)
 ```
 
 ### Using `flatMap`
@@ -341,7 +352,33 @@ You can use the `flatMap` method to transform the value inside a `Success` with 
 ```typescript
 import { Try } from '@leanmind/monads';
 
-const success = Try.execute(() => 42).flatMap(x => Try.execute(() => x + 1)); // Success(43)
+const success = Try.success(42).flatMap(x => Try.success(x + 1)); // Success(43)
+```
+
+### Retrieving the value
+
+You can use the `getOrElse` method to retrieve the value of a `Success` or provide a default value if it is `Failure`.
+
+```typescript
+import { Try } from '@leanmind/monads';
+
+const success = Try.sucess(42);
+const value = success.getOrElse(0); // 42
+
+const failure = Try.failure(new Error('Error'));
+const otherValue = failure.getOrElse(0); // 0
+```
+
+Also, you can use the `getOrThrow` method to retrieve the value of a `Success` or throw the error if it is `Failure`.
+
+```typescript
+import { Try } from '@leanmind/monads';
+
+const success = Try.success(42);
+const value = success.getOrThrow(); // 42
+
+const failure = Try.failure(new Error('Error'));
+const otherValue = failure.getOrThrow(); // throws Error('Error')
 ```
 
 ### Matching a Try
@@ -351,16 +388,14 @@ You can use the `match` method to handle both `Success` and `Failure` cases and 
 ```typescript
 import { Try } from '@leanmind/monads';
 
-const success = Try.execute(() => 42).match(
+const success = Try.sucess(42).match(
   err => `Error: ${err}`,
-  x => x + 1
-); // 43
+  x => `${x + 1}`
+); // '43'
 
-const failure = Try.execute(() => {
-  throw new Error('Error');
-}).match(
+const failure = Try.failure(new Error('Error')).match(
   err => `Error: ${err}`,
-  x => x + 1
+  x => `${x + 1}`
 ); // 'Error: Error'
 ```
 

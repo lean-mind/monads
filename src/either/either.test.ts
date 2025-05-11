@@ -17,15 +17,15 @@ describe('Either monad', () => {
   });
 
   it.each([
-    { typeMatchable: 'Some', eitherType: 'Right', matchable: Option.of(2), expected: Either.right(2) },
+    { typeFoldable: 'Some', eitherType: 'Right', foldable: Option.of(2), expected: Either.right(2) },
     {
-      typeMatchable: 'None',
+      typeFoldable: 'None',
       eitherType: 'Left',
-      matchable: Option.of<number>(undefined),
+      foldable: Option.of<number>(undefined),
       expected: Either.left(undefined),
     },
-  ])('$eitherType should be created from $typeMatchable', ({ matchable, expected }) => {
-    expect(Either.from(matchable)).toEqual(expected);
+  ])('$eitherType should be created from $typeFoldable', ({ foldable, expected }) => {
+    expect(Either.from(foldable)).toEqual(expected);
   });
 
   it.each([
@@ -42,33 +42,6 @@ describe('Either monad', () => {
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-expect-error
     expect(either.flatMapLeft(closure)).toEqual(expected);
-  });
-
-  it.each([
-    {
-      type: 'Right',
-      either: Either.right<number, number>(2),
-      fr: (x: number) => x,
-      fl: (x: number) => x.toString(),
-      expected: 2,
-    },
-  ])(
-    'Either $type can handle closures to unwrap distinct types of results by algebraic types',
-    ({ either, expected, fr, fl }) => {
-      expect(either.match<string | number>(fr, fl)).toEqual(expected);
-    }
-  );
-
-  it.each([
-    {
-      type: 'Left',
-      either: Either.left<string, string>('Some Error'),
-      fr: (x: string) => x,
-      fl: (error: string) => `Error: ${error}`,
-      expected: 'Error: Some Error',
-    },
-  ])('Either $type can handle closures to unwrap distinct types of results', ({ either, expected, fr, fl }) => {
-    expect(either.match(fr, fl)).toEqual(expected);
   });
 
   it.each([

@@ -11,15 +11,15 @@ describe('Option monad', () => {
   });
 
   it.each([
-    { typeMatchable: 'Right', optionType: 'Some', matchable: Either.right(2), expected: Option.of(2) },
+    { typeFoldable: 'Right', optionType: 'Some', foldable: Either.right(2), expected: Option.of(2) },
     {
-      typeMatchable: 'Left',
+      typeFoldable: 'Left',
       optionType: 'None',
-      matchable: Either.left(12),
+      foldable: Either.left(12),
       expected: Option.of<number>(undefined),
     },
-  ])('$optionType should be created from $typeMatchable', ({ matchable, expected }) => {
-    expect(Option.from(matchable)).toEqual(expected);
+  ])('$optionType should be created from $typeFoldable', ({ foldable, expected }) => {
+    expect(Option.from(foldable)).toEqual(expected);
   });
 
   it.each([

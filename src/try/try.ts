@@ -3,6 +3,11 @@ import { Matchable } from '../match';
 import { Futurizable } from '../futurizable';
 import { Future } from '../future';
 
+interface FoldingTry<T, U> {
+  ifSuccess: (value: T) => U;
+  ifFailure: (error: Error) => U;
+}
+
 /**
  * Abstract class representing a computation that may either result in a value or an error.
  * @template T The type of the value.
@@ -128,6 +133,20 @@ abstract class Try<T> implements Monad<T>, Matchable<T, Error>, Futurizable<T> {
    * result.match(console.log, error => console.error(error.message)); // Unexpected token i in JSON at position 0
    */
   abstract match<U>(ifSuccess: (value: T) => U, ifFailure: (error: Error) => U): U;
+
+  /**
+   * Unwraps the value contained in this `Try` instance by applying the appropriate handler for both Success and Failure cases.
+   * @template T The type of the value.
+   * @template U The type of the result.
+   * @param {FoldingTry<T, U>} folding The folding object containing the functions to call for each case.
+   * @returns {U} The result of the matching function.
+   * @example
+   * const result = Try.success(5);
+   * result.fold({ ifSuccess: console.log, ifFailure: (error) => console.error(error.message) }); // 5
+   */
+  fold<U>(folding: FoldingTry<T, U>): U {
+    return this.match(folding.ifSuccess, folding.ifFailure);
+  }
 
   /**
    * Checks if this is a `Success` instance.

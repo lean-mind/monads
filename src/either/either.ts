@@ -3,6 +3,11 @@ import { Matchable } from '../match';
 import { Future } from '../future';
 import { Futurizable } from '../futurizable';
 
+interface FoldingEither<R, L, T> {
+  ifRight: (right: R) => T;
+  ifLeft: (left: L) => T;
+}
+
 /**
  * Abstract class representing a value that can be one of two possible types.
  * @template L The type of the left value.
@@ -170,6 +175,21 @@ abstract class Either<L, R> implements Monad<R>, Matchable<R, L>, Futurizable<R>
    * result.match(console.log, console.error); // 5
    */
   abstract match<T>(ifRight: (r: R) => T, ifLeft: (l: L) => T): T;
+
+  /**
+   * Unwraps the value contained in this `Either` instance by applying the appropriate handler for both Left and Right cases.
+   * @template R The type of the right value.
+   * @template L The type of the left value.
+   * @template T The type of the result.
+   * @param {FoldingEither<R, L, T>} folding The folding object containing the functions to call for each case.
+   * @returns {T} The result of the matching function.
+   * @example
+   * const result = Either.right(5);
+   * result.fold({ ifRight: console.log, ifLeft: console.error }); // 5
+   */
+  fold<T>(folding: FoldingEither<R, L, T>): T {
+    return this.match(folding.ifRight, folding.ifLeft);
+  }
 
   /**
    * Checks if this is a `Left` instance.

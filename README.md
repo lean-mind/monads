@@ -174,7 +174,7 @@ You can use the `fold` method to handle both `Right` and `Left` cases and unwrap
 ```typescript
 import { Either } from '@leanmind/monads';
 
-const sucess = Either.right<string, number>(42).fold({
+const success = Either.right<string, number>(42).fold({
   ifRight: x => `${x + 1}`,
   ifLeft: err => `Error: ${err}`,
 }); // '43'
@@ -454,7 +454,7 @@ You can use the `getOrElse` method to retrieve the value of a `Success` or provi
 ```typescript
 import { Try } from '@leanmind/monads';
 
-const success = Try.sucess(42);
+const success = Try.success(42);
 const value = success.getOrElse(0); // 42
 
 const failure = Try.failure(new Error('Error'));
@@ -480,7 +480,7 @@ You can use the `fold` method to handle both `Success` and `Failure` cases and u
 ```typescript
 import { Try } from '@leanmind/monads';
 
-const success = Try.sucess(42).fold({
+const success = Try.success(42).fold({
   ifSuccess: x => `${x + 1}`,
   ifFailure: err => `Error: ${err}`,
 }); // '43'

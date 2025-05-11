@@ -61,7 +61,7 @@ abstract class Try<T> implements Monad<T>, Futurizable<T>, Foldable<T, Error> {
    * @example
    * const some = Option.of(5);
    * const success = Try.from(some);
-   * sucess.fold({ ifSuccess: console.log, ifFailure: error => console.error(error.message) }); // 5
+   * success.fold({ ifSuccess: console.log, ifFailure: error => console.error(error.message) }); // 5
    *
    * const none = Option.of(undefined);
    * const failure = Try.from(none);

@@ -12,6 +12,7 @@ This is a set of implementations of monads in TypeScript with OOP perspective.
       * [Mapping over an Either](#mapping-over-an-either)
         * [Using `flatMap` and `flatMapLeft`](#using-flatmap-and-flatmapleft)
         * [Using `map` and `mapLeft`](#using-map-and-mapleft)
+    * [Recovering from a Left value](#recovering-from-a-left-value)
     * [Running side effects](#running-side-effects)
       * [Matching an Either](#matching-an-either)
       * [checking if an Either is Right or Left](#checking-if-an-either-is-right-or-left)
@@ -122,6 +123,26 @@ import { Either } from '@leanmind/monads';
 
 const right = Either.right(42).map(x => x + 1); // Right(43)
 const left = Either.left('Error').mapLeft(err => `New ${err}`); // Left('New Error')
+```
+
+### Recovering from a Left value
+
+You can use the `recover` method to recover from a `Left` value and transform it into a `Right`.
+
+```typescript
+import { Either } from '@leanmind/monads';
+
+const recoverIfEven = (x: number) => {
+  if (x % 2 === 0) {
+    return Either.right('Even');
+  }
+  return Either.left('Not even');
+};
+
+const right = Either.right<number, string>('irrelevant').recover(recoverIfEven); // Right('irrelevant')
+
+const leftEven = Either.left<number, number>(42).recover(recoverIfEven); // Right('Even')
+const leftOdd = Either.left<number, number>(43).recover(recoverIfEven); // Left('Not even')
 ```
 
 ### Running side effects

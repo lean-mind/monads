@@ -12,9 +12,9 @@ This is a set of implementations of monads in TypeScript with OOP perspective.
       * [Mapping over an Either](#mapping-over-an-either)
         * [Using `flatMap` and `flatMapLeft`](#using-flatmap-and-flatmapleft)
         * [Using `map` and `mapLeft`](#using-map-and-mapleft)
-    * [Recovering from a Left value](#recovering-from-a-left-value)
-    * [Running side effects](#running-side-effects)
-      * [Matching an Either](#matching-an-either)
+      * [Recovering from a Left value](#recovering-from-a-left-value)
+      * [Running side effects](#running-side-effects)
+      * [Folding an Either](#folding-an-either)
       * [checking if an Either is Right or Left](#checking-if-an-either-is-right-or-left)
       * [Chaining operations](#chaining-operations)
       * [Handling errors](#handling-errors)
@@ -26,18 +26,18 @@ This is a set of implementations of monads in TypeScript with OOP perspective.
       * [Mapping over an Option](#mapping-over-an-option)
         * [Using `flatMap`](#using-flatmap)
         * [Using `map`](#using-map)
-    * [Running side effects](#running-side-effects-1)
-      * [Matching an Option](#matching-an-option)
+      * [Running side effects](#running-side-effects-1)
+      * [Folding an Option](#folding-an-option)
       * [Checking if an Option is Some or None](#checking-if-an-option-is-some-or-none)
   * [Try Monad](#try-monad)
     * [Usage](#usage-2)
-    * [Using `map`](#using-map-1)
-    * [Using `flatMap`](#using-flatmap-1)
-    * [Running side effects](#running-side-effects-2)
-    * [Retrieving the value](#retrieving-the-value)
-    * [Matching a Try](#matching-a-try)
-    * [Handling errors in Infrastructure code](#handling-errors-in-infrastructure-code)
-    * [Checking if a Try is Success or Failure](#checking-if-a-try-is-success-or-failure)
+      * [Using `map`](#using-map-1)
+      * [Using `flatMap`](#using-flatmap-1)
+      * [Running side effects](#running-side-effects-2)
+      * [Retrieving the value](#retrieving-the-value)
+      * [Folding a Try](#folding-a-try)
+      * [Handling errors in Infrastructure code](#handling-errors-in-infrastructure-code)
+      * [Checking if a Try is Success or Failure](#checking-if-a-try-is-success-or-failure)
   * [Future Monad](#future-monad)
     * [Usage](#usage-3)
       * [Creating a Future](#creating-a-future)
@@ -110,7 +110,9 @@ transform the value inside a `Left`.
 ##### Using `flatMap` and `flatMapLeft`
 
 ```typescript
-import { Either } from '@leanmind/monads';m
+import { Either } from '@leanmind/monads';
+
+m
 
 const right = Either.right(42).flatMap(x => Either.right(x + 1)); // Right(43)
 const left = Either.left('Error').flatMapLeft(err => Either.left(`New ${err}`)); // Left('New Error')
@@ -125,7 +127,7 @@ const right = Either.right(42).map(x => x + 1); // Right(43)
 const left = Either.left('Error').mapLeft(err => `New ${err}`); // Left('New Error')
 ```
 
-### Recovering from a Left value
+#### Recovering from a Left value
 
 You can use the `recover` method to recover from a `Left` value and transform it into a `Right`.
 
@@ -145,7 +147,7 @@ const leftEven = Either.left<number, number>(42).recover(recoverIfEven); // Righ
 const leftOdd = Either.left<number, number>(43).recover(recoverIfEven); // Left('Not even')
 ```
 
-### Running side effects
+#### Running side effects
 
 You can use the `onRight` method to run side effects on the value inside a `Right`.
 
@@ -165,22 +167,22 @@ const right = Either.right(42).onLeft(err => console.log(err)); // No execution
 const left = Either.left('Error').onLeft(err => console.log(err)); // 'Error'
 ```
 
-#### Matching an Either
+#### Folding an Either
 
-You can use the `match` method to handle both `Right` and `Left` cases and unwrap the result.
+You can use the `fold` method to handle both `Right` and `Left` cases and unwrap the result.
 
 ```typescript
 import { Either } from '@leanmind/monads';
 
-const sucess = Either.right(42).match(
-  err => `Error: ${err}`,
-  x => (x + 1).toString()
-); // '43'
+const sucess = Either.right<string, number>(42).fold({
+  ifRight: x => `${x + 1}`,
+  ifLeft: err => `Error: ${err}`,
+}); // '43'
 
-const error = Either.left('Error').match(
-  err => `Error: ${err}`,
-  x => (x + 1).toString(),
-); // 'Error: Error'
+const error = Either.left<string, number>('Error').fold({
+  ifRight: x => `${x + 1}`,
+  ifLeft: err => `Error: ${err}`,
+}); // 'Error: Error'
 ```
 
 #### checking if an Either is Right or Left
@@ -213,10 +215,10 @@ import { Either } from '@leanmind/monads';
 const result = Either.right(42)
   .map(x => x + 1)
   .map(x => x * 2)
-  .match<string|number>(
-    err => `Error: ${err}`,
-    x => x
-  );
+  .fold({
+    ifRight: x => x.toString(),
+    ifLeft: err => `Error: ${err}`,
+  })
 
 console.log(result); // 86
 ```
@@ -237,16 +239,16 @@ function divide(a: number, b: number): Either<string, number> {
 
 const result = divide(10, 2)
   .map(x => x * 2)
-  .match(
-    err => `Error: ${err}`,
-    value => `Result: ${value}`
-  );
+  .fold({
+    ifRight: x => `Result: ${x}`,
+    ifLeft: err => `Error: ${err}`,
+  });
 
 console.log(result); // 'Result: 10'
 ```
 
 In this example, the divide function returns an `Either` that represents the result of the division or an error if the
-division is by zero. The result is then transformed and matched to produce a final `string`.
+division is by zero. The result is then transformed and folded to produce a final `string`.
 
 ## Option Monad
 
@@ -289,7 +291,9 @@ none.getOrElse(0); // 0
 You can use the `filter` method to keep the `Some` value if it satisfies a predicate.
 
 ```typescript
-import { Option } from '@leanmind/monads';m
+import { Option } from '@leanmind/monads';
+
+m
 
 const some = Option.of(42).filter(x => x > 40); // Some(42)
 const none = Option.of(42).filter(x => x > 50); // None
@@ -302,7 +306,9 @@ You can use the `flatMap` or `map` method to transform the `Some` value.
 ##### Using `flatMap`
 
 ```typescript
-import { Option } from '@leanmind/monads';m
+import { Option } from '@leanmind/monads';
+
+m
 
 const some = Option.of(42).flatMap(x => Option.of(x + 1)); // Some(43)
 const none = Option.of(null).flatMap(x => Option.of(x + 1)); // None
@@ -317,7 +323,7 @@ const some = Option.of(42).map(x => x + 1); // Some(43)
 const none = Option.of(null).map(x => x + 1); // None
 ```
 
-### Running side effects
+#### Running side effects
 
 You can use the `onSome` method to run side effects on the value inside a `Some`.
 
@@ -337,22 +343,22 @@ const some = Option.some(42).onNone(_ => console.log('Empty value')); // No exec
 const none = Option.none().onNone(_ => console.log('Empty value')); // 'Empty value'
 ```
 
-#### Matching an Option
+#### Folding an Option
 
-You can use the `match` method to handle both `Some` and `None` cases and unwrap the result.
+You can use the `fold` method to handle both `Some` and `None` cases and unwrap the result.
 
 ```typescript
 import { Option } from '@leanmind/monads';
 
-const some = Option.of(42).match(
-  x => x + 1,
-  () => 'No value'
-); // 43
+const some = Option.of(42).fold({
+  ifSome: x => `${x + 1}`,
+  ifNone: () => 'No value',
+}); // '43'
 
-const none = Option.of(null).match(
-  x => x + 1,
-  () => 'No value'
-); // 'No value'
+const none = Option.of(null).fold({
+  ifSome: x => `${x + 1}`,
+  ifNone: () => 'No value',
+}); // 'No value'
 ```
 
 #### Checking if an Option is Some or None
@@ -399,17 +405,19 @@ const failure = Try.execute(() => {
 }); // Failure(Error('Error'))
 ```
 
-### Using `map`
+#### Using `map`
 
 You can use the `map` method to transform the value inside a `Success`.
 
 ```typescript
-import { Try } from '@leanmind/monads';m
+import { Try } from '@leanmind/monads';
+
+m
 
 const success = Try.success(42).map(x => x + 1); // Success(43)
 ```
 
-### Using `flatMap`
+#### Using `flatMap`
 
 You can use the `flatMap` method to transform the value inside a `Success` with a fallible closure.
 
@@ -419,7 +427,7 @@ import { Try } from '@leanmind/monads';
 const success = Try.success(42).flatMap(x => Try.success(x + 1)); // Success(43)
 ```
 
-### Running side effects
+#### Running side effects
 
 You can use the `onSuccess` method to run side effects on the value inside a `Success`.
 
@@ -439,7 +447,7 @@ const succcess = Try.succcess(42).onFailure(err => console.log(err)); // No exec
 const failure = Try.failure(new Error('Error')).onFailure(err => console.log(err)); // Error('Error')
 ```
 
-### Retrieving the value
+#### Retrieving the value
 
 You can use the `getOrElse` method to retrieve the value of a `Success` or provide a default value if it is `Failure`.
 
@@ -465,25 +473,25 @@ const failure = Try.failure(new Error('Error'));
 const otherValue = failure.getOrThrow(); // throws Error('Error')
 ```
 
-### Matching a Try
+#### Folding a Try
 
-You can use the `match` method to handle both `Success` and `Failure` cases and unwrap the result.
+You can use the `fold` method to handle both `Success` and `Failure` cases and unwrap the result.
 
 ```typescript
 import { Try } from '@leanmind/monads';
 
-const success = Try.sucess(42).match(
-  err => `Error: ${err}`,
-  x => `${x + 1}`
-); // '43'
+const success = Try.sucess(42).fold({
+  ifSuccess: x => `${x + 1}`,
+  ifFailure: err => `Error: ${err}`,
+}); // '43'
 
-const failure = Try.failure(new Error('Error')).match(
-  err => `Error: ${err}`,
-  x => `${x + 1}`
-); // 'Error: Error'
+const failure = Try.failure(new Error('an error')).fold({
+  ifSuccess: x => `${x + 1}`,
+  ifFailure: err => `Error: ${err}`,
+}); // 'Error: an error'
 ```
 
-### Handling errors in Infrastructure code
+#### Handling errors in Infrastructure code
 
 Normally, Try is used to handle `Exceptions` that are raise by third party libraries
 
@@ -493,15 +501,15 @@ import { Try } from '@leanmind/monads';
 const result = Try.execute(() => {
   // Some API of a library that may throw an exception
   return 42;
-}).match(
-  err => `Error: ${err}`,
-  x => x + 1
-);
+}).fold({
+  ifSuccess: x => `${x + 1}`,
+  ifFailure: err => `Error: ${err.message}`,
+})
 
 console.log(result); // 43
 ```
 
-### Checking if a Try is Success or Failure
+#### Checking if a Try is Success or Failure
 
 If needed, you can check explicitly if a `Try` is `Success` or `Failure` using the `isSuccess` and `isFailure` methods.
 
@@ -598,6 +606,7 @@ So, you can operate as pure functions until you call the `runUnsafe` method.
 ### Usage
 
 #### Creating an IO
+
 You can create an `IO` using the static method `IO.of`.
 
 ```typescript

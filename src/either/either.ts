@@ -11,27 +11,29 @@ import { Futurizable } from '../futurizable';
 abstract class Either<L, R> implements Monad<R>, Matchable<R, L>, Futurizable<R> {
   /**
    * Creates a `Right` instance.
-   * @template T The type of the right value.
-   * @param {T} value The right value.
-   * @returns {Either<never, T>} A `Right` instance containing the value.
+   * @template L The type of the left value.
+   * @template R The type of the right value.
+   * @param {R} value The right value.
+   * @returns {Either<L, R>} A `Right` instance containing the value.
    * @example
    * const right = Either.right(5);
    * right.match(console.log, error => console.error(error.message)); // 5
    */
-  static right<T>(value: T): Either<never, T> {
+  static right<L, R>(value: R): Either<L, R> {
     return new Right(value);
   }
 
   /**
    * Creates a `Left` instance.
-   * @template T The type of the left value.
-   * @param {T} value The left value.
-   * @returns {Either<T, never>} A `Left` instance containing the value.
+   * @template L The type of the left value.
+   * @template R The type of the right value.
+   * @param {L} value The left value.
+   * @returns {Either<L, R>} A `Left` instance containing the value.
    * @example
    * const left = Either.left('error');
    * left.match(console.log, error => console.error(error.message)); // 'error'
    */
-  static left<T>(value: T): Either<T, never> {
+  static left<L, R>(value: L): Either<L, R> {
     return new Left(value);
   }
 
@@ -47,7 +49,7 @@ abstract class Either<L, R> implements Monad<R>, Matchable<R, L>, Futurizable<R>
    * either.match(console.log, error => console.error(error.message)); // 5
    */
   static from<L, R>(matchable: Matchable<R, L>): Either<L, R> {
-    return matchable.match<Either<L, R>>(
+    return matchable.match(
       (value: R) => Either.right(value),
       (value: L) => Either.left(value)
     );

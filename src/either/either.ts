@@ -1,19 +1,16 @@
 import { Monad } from '../monad';
-import { Matchable } from '../match';
 import { Future } from '../future';
 import { Futurizable } from '../futurizable';
+import { Foldable, Folding } from '../fold';
 
-interface FoldingEither<R, L, T> {
-  ifRight: (right: R) => T;
-  ifLeft: (left: L) => T;
-}
+type FoldingEither<R, L, T> = Folding<'Either', R, L, T>;
 
 /**
  * Abstract class representing a value that can be one of two possible types.
  * @template L The type of the left value.
  * @template R The type of the right value.
  */
-abstract class Either<L, R> implements Monad<R>, Matchable<R, L>, Futurizable<R> {
+abstract class Either<L, R> implements Monad<R>, Futurizable<R>, Foldable<R, L> {
   /**
    * Creates a `Right` instance.
    * @template L The type of the left value.
@@ -22,7 +19,7 @@ abstract class Either<L, R> implements Monad<R>, Matchable<R, L>, Futurizable<R>
    * @returns {Either<L, R>} A `Right` instance containing the value.
    * @example
    * const right = Either.right(5);
-   * right.match(console.log, error => console.error(error.message)); // 5
+   * right.fold({ ifRight: console.log, ifLeft: error => console.error(error.message) }); // 5
    */
   static right<L, R>(value: R): Either<L, R> {
     return new Right(value);
@@ -36,28 +33,33 @@ abstract class Either<L, R> implements Monad<R>, Matchable<R, L>, Futurizable<R>
    * @returns {Either<L, R>} A `Left` instance containing the value.
    * @example
    * const left = Either.left('error');
-   * left.match(console.log, error => console.error(error.message)); // 'error'
+   * left.fold({ ifRight: console.log, ifLeft: error => console.error(error.message) }); // 'error'
    */
   static left<L, R>(value: L): Either<L, R> {
     return new Left(value);
   }
 
   /**
-   * Creates an `Either` instance from a `Matchable` instance.
+   * Creates an `Either` instance from a `Foldable` instance.
    * @template L The type of the left value.
    * @template R The type of the right value.
-   * @param {Matchable<R, L>} matchable The matchable instance.
-   * @returns {Either<L, R>} A `Right` instance if the matchable contains a right value, otherwise a `Left` instance.
+   * @param {Foldable<R, L>} foldable The foldable instance.
+   * @returns {Either<L, R>} A `Right` instance if the foldable contains a right value, otherwise a `Left` instance.
    * @example
    * const option = Option.of(5);
    * const either = Either.from(option);
-   * either.match(console.log, error => console.error(error.message)); // 5
+   * either.fold({ ifRight: console.log, ifLeft: error => console.error(error.message) }); // 5
    */
-  static from<L, R>(matchable: Matchable<R, L>): Either<L, R> {
-    return matchable.match(
-      (value: R) => Either.right(value),
-      (value: L) => Either.left(value)
-    );
+  static from<L, R>(foldable: Foldable<R, L>): Either<L, R> {
+    const folding = {
+      ifRight: (value: R): Either<L, R> => Either.right<L, R>(value),
+      ifLeft: (value: L) => Either.left<L, R>(value),
+      ifSuccess: (value: R) => Either.right<L, R>(value),
+      ifFailure: (value: L) => Either.left<L, R>(value),
+      ifSome: (value: R) => Either.right<L, R>(value),
+      ifNone: (value: L) => Either.left<L, R>(value),
+    };
+    return foldable.fold<Either<L, R>>(folding);
   }
 
   /**
@@ -67,7 +69,7 @@ abstract class Either<L, R> implements Monad<R>, Matchable<R, L>, Futurizable<R>
    * @returns {Either<Error, T>} A `Right` instance if the function executes without error, otherwise a `Left` instance.
    * @example
    * const result = Either.catch(() => JSON.parse('invalid json'));
-   * result.match(console.log, error => console.error(error.message)); // 'SyntaxError: Unexpected token i in JSON at position 0'
+   * result.fold({ ifRight: console.log, ifLeft: error => console.error(error.message) }); // Error: Unexpected token i in JSON at position 0
    */
   static catch<T>(execute: () => T): Either<Error, T> {
     try {
@@ -85,7 +87,7 @@ abstract class Either<L, R> implements Monad<R>, Matchable<R, L>, Futurizable<R>
    * @returns {Either<L, T>} A new `Either` instance containing the transformed value.
    * @example
    * const result = Either.right(5).map(value => value * 2);
-   * result.match(console.log, console.error); // 10
+   * result.fold({ ifRight: console.log, ifLeft: error => console.error(error.message) }); // 10
    */
   abstract map<T>(transform: (r: R) => T): Either<L, T>;
 
@@ -98,10 +100,11 @@ abstract class Either<L, R> implements Monad<R>, Matchable<R, L>, Futurizable<R>
    * @returns {Either<T, R>} A new `Either` instance containing the transformed value.
    * @example
    * const result = Either.left('error').mapLeft(value => `Error: ${value}`);
-   * result.match(console.log, console.error); // 'Error: error'
+   * result.fold({ ifRight: console.log, ifLeft: error => console.error(error.message) }); // Error: error
    */
   abstract mapLeft<T>(transform: (l: L) => T): Either<T, R>;
 
+  abstract flatMap<T>(transform: (r: R) => Either<L, T>): Either<L, T>;
   /**
    * Transforms the right value contained in this `Either` instance into another `Either` instance.
    * @template R The type of the right value.
@@ -110,9 +113,8 @@ abstract class Either<L, R> implements Monad<R>, Matchable<R, L>, Futurizable<R>
    * @returns {Either<L, T>} The result of the transformation function.
    * @example
    * const result = Either.right(5).flatMap(value => Either.right(value * 2));
-   * result.match(console.log, console.error); // 10
+   * result.fold({ ifRight: console.log, ifLeft: error => console.error(error.message) }); // 10
    */
-  abstract flatMap<T>(transform: (r: R) => Either<L, T>): Either<L, T>;
 
   /**
    * Transforms the left value contained in this `Either` instance into another `Either` instance.
@@ -123,7 +125,7 @@ abstract class Either<L, R> implements Monad<R>, Matchable<R, L>, Futurizable<R>
    * @returns {Either<T, R>} The result of the transformation function.
    * @example
    * const result = Either.left('error').flatMapLeft(value => Either.left(`Error: ${value}`));
-   * result.match(console.log, console.error); // Error: error
+   * result.fold({ ifRight: console.log, ifLeft: error => console.error(error.message) }); // Error: Error: error
    */
   abstract flatMapLeft<T>(transform: (l: L) => Either<T, R>): Either<T, R>;
 
@@ -136,7 +138,7 @@ abstract class Either<L, R> implements Monad<R>, Matchable<R, L>, Futurizable<R>
    * @returns {Either<T, R>} A new `Either` instance containing the transformed value.
    * @example
    * const result = Either.left('error').recover(value => Either.right(`Recovered: ${value}`));
-   * result.match(console.log, console.error); // Recovered: error
+   * result.fold({ ifRight: console.log, ifLeft: error => console.error(error.message) }); // Recovered: error
    */
   abstract recover<T>(transform: (l: L) => Either<T, R>): Either<T, R>;
 
@@ -167,36 +169,20 @@ abstract class Either<L, R> implements Monad<R>, Matchable<R, L>, Futurizable<R>
    * @template R The type of the right value.
    * @template L The type of the left value.
    * @template T The type of the result.
-   * @param {(r: R) => T} ifRight The function to call if this is a `Right` instance.
-   * @param {(l: L) => T} ifLeft The function to call if this is a `Left` instance.
-   * @returns {T} The result of the matching function.
-   * @example
-   * const result = Either.right(5);
-   * result.match(console.log, console.error); // 5
-   */
-  abstract match<T>(ifRight: (r: R) => T, ifLeft: (l: L) => T): T;
-
-  /**
-   * Unwraps the value contained in this `Either` instance by applying the appropriate handler for both Left and Right cases.
-   * @template R The type of the right value.
-   * @template L The type of the left value.
-   * @template T The type of the result.
    * @param {FoldingEither<R, L, T>} folding The folding object containing the functions to call for each case.
-   * @returns {T} The result of the matching function.
+   * @returns {T} The result of the folding function.
    * @example
    * const result = Either.right(5);
    * result.fold({ ifRight: console.log, ifLeft: console.error }); // 5
    */
-  fold<T>(folding: FoldingEither<R, L, T>): T {
-    return this.match(folding.ifRight, folding.ifLeft);
-  }
+  abstract fold<T>(folding: FoldingEither<R, L, T>): T;
 
   /**
    * Checks if this is a `Left` instance.
    * @returns {boolean} `true` if this is a `Left` instance, otherwise `false`.
    * @example
    * const result = Either.left('error');
-   * console.log(result.isLeft()); // true
+   * result.isLeft(); // true
    */
   abstract isLeft(): this is Left<L, R>;
 
@@ -205,7 +191,7 @@ abstract class Either<L, R> implements Monad<R>, Matchable<R, L>, Futurizable<R>
    * @returns {boolean} `true` if this is a `Right` instance, otherwise `false`.
    * @example
    * const result = Either.right(5);
-   * console.log(result.isRight()); // true
+   * result.isRight(); // true
    */
   abstract isRight(): this is Right<L, R>;
 
@@ -267,8 +253,8 @@ class Left<L, R> extends Either<L, R> {
     return this;
   }
 
-  match<T>(_: (_: R) => T, ifLeft: (l: L) => T): T {
-    return ifLeft(this.value);
+  fold<T>(folding: FoldingEither<R, L, T>): T {
+    return folding.ifLeft(this.value);
   }
 
   isLeft(): this is Left<L, never> {
@@ -327,8 +313,8 @@ class Right<L, R> extends Either<L, R> {
     return this;
   }
 
-  match<T>(ifRight: (r: R) => T, _: (_: L) => T): T {
-    return ifRight(this.value);
+  fold<T>(folding: FoldingEither<R, L, T>): T {
+    return folding.ifRight(this.value);
   }
 
   isLeft(): this is Left<never, R> {

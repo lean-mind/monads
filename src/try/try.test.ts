@@ -18,27 +18,27 @@ describe('Try monad', () => {
   });
 
   it.each([
-    { typeMatchable: 'Right', tryType: 'Success', matchable: Either.right(2), expected: new Success(2) },
+    { typeFoldable: 'Right', tryType: 'Success', foldable: Either.right(2), expected: new Success(2) },
     {
-      typeMatchable: 'Left',
+      typeFoldable: 'Left',
       tryType: 'Failure',
-      matchable: Either.left(new Error('An error occurred')),
-      expected: new Failure(new Error('An error occurred')),
+      foldable: Either.left('irrelevant'),
+      expected: new Failure(new Error('Left value: irrelevant')),
     },
     {
-      typeMatchable: 'Some',
+      typeFoldable: 'Some',
       tryType: 'Success',
-      matchable: Option.of(2),
+      foldable: Option.of(2),
       expected: new Success(2),
     },
     {
-      typeMatchable: 'None',
+      typeFoldable: 'None',
       tryType: 'Failure',
-      matchable: Option.of<number>(undefined),
-      expected: new Failure(new Error('No error provided')),
+      foldable: Option.of<number>(undefined),
+      expected: new Failure(new Error('Empty value')),
     },
-  ])('$tryType should be created from $typeMatchable', ({ matchable, expected }) => {
-    expect(Try.from(matchable)).toEqual(expected);
+  ])('$tryType should be created from $typeFoldable', ({ foldable, expected }) => {
+    expect(Try.from(foldable)).toEqual(expected);
   });
 
   it.each([

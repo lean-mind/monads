@@ -1,18 +1,15 @@
 import { Monad } from '../monad';
-import { Matchable } from '../match';
 import { Futurizable } from '../futurizable';
 import { Future } from '../future';
+import { Foldable, Folding } from '../fold';
 
-interface FoldingTry<T, U> {
-  ifSuccess: (value: T) => U;
-  ifFailure: (error: Error) => U;
-}
+type FoldingTry<T, U> = Folding<'Try', T, Error, U>;
 
 /**
  * Abstract class representing a computation that may either result in a value or an error.
  * @template T The type of the value.
  */
-abstract class Try<T> implements Monad<T>, Matchable<T, Error>, Futurizable<T> {
+abstract class Try<T> implements Monad<T>, Futurizable<T>, Foldable<T, Error> {
   /**
    * Executes a function and returns a `Try` instance.
    * @template T The type of the value.
@@ -20,7 +17,7 @@ abstract class Try<T> implements Monad<T>, Matchable<T, Error>, Futurizable<T> {
    * @returns {Try<T>} A `Success` instance if the function executes without error, otherwise a `Failure` instance.
    * @example
    * const result = Try.execute(() => JSON.parse('{"key": "value"}'));
-   * result.match(console.log, error => console.error(error.message)); // { key: 'value' }
+   * result.fold({ ifSuccess: console.log, ifFailure: error => console.error(error.message) }); // { key: 'value' }
    */
   static execute<T>(executable: () => T): Try<T> {
     try {
@@ -37,7 +34,7 @@ abstract class Try<T> implements Monad<T>, Matchable<T, Error>, Futurizable<T> {
    * @returns {Success<T>} A `Success` instance containing the value.
    * @example
    * const success = Try.success(5);
-   * success.match(console.log, error => console.error(error.message)); // 5
+   * success.fold({ ifSuccess: console.log, ifFailure: error => console.error(error.message) }); // 5
    */
   static success<T>(value: T): Try<T> {
     return new Success(value);
@@ -50,31 +47,35 @@ abstract class Try<T> implements Monad<T>, Matchable<T, Error>, Futurizable<T> {
    * @returns {Failure<T>} A `Failure` instance containing the error.
    * @example
    * const failure = Try.failure(new Error('An error occurred'));
-   * failure.match(console.log, error => console.error(error.message)); // An error occurred
+   * failure.fold({ ifSuccess: console.log, ifFailure: error => console.error(error.message) }); // An error occurred
    */
   static failure<T>(error: Error): Try<T> {
     return new Failure(error);
   }
 
   /**
-   * Creates a `Try` instance from a `Matchable` instance.
+   * Creates a `Try` instance from a `Foldable` instance.
    * @template T The type of the value.
-   * @param {Matchable<T, unknown>} matchable The matchable instance.
-   * @returns {Try<T>} A `Success` instance if the matchable contains a value, otherwise a `Failure` instance.
+   * @param {Foldable<T, unknown>} foldable The foldable instance.
+   * @returns {Try<T>} A `Success` instance if the foldable contains a value, otherwise a `Failure` instance.
    * @example
    * const some = Option.of(5);
    * const success = Try.from(some);
-   * sucess.match(console.log, error => console.error(error.message)); // 5
+   * sucess.fold({ ifSuccess: console.log, ifFailure: error => console.error(error.message) }); // 5
    *
    * const none = Option.of(undefined);
    * const failure = Try.from(none);
-   * failure.match(console.log, error => console.error(error.message)); // "No error provided"
+   * failure.fold({ ifSuccess: console.log, ifFailure: error => console.error(error.message) }); // Empty value
    */
-  static from<T>(matchable: Matchable<T, unknown>): Try<T> {
-    return matchable.match<Try<T>>(
-      (value: T) => new Success(value),
-      (error: unknown) => (error instanceof Error ? new Failure(error) : new Failure(new Error('No error provided')))
-    );
+  static from<T>(foldable: Foldable<T, unknown>): Try<T> {
+    return foldable.fold<Try<T>>({
+      ifSuccess: (value: T) => Try.success(value),
+      ifFailure: (error: unknown) => Try.failure<T>(error as Error),
+      ifSome: (value: T) => Try.success(value),
+      ifNone: () => Try.failure<T>(new Error('Empty value')),
+      ifRight: (value: T) => Try.success(value),
+      ifLeft: (value: unknown) => Try.failure<T>(new Error('Left value: ' + value)),
+    });
   }
 
   /**
@@ -85,7 +86,7 @@ abstract class Try<T> implements Monad<T>, Matchable<T, Error>, Futurizable<T> {
    * @returns {Try<U>} A new `Try` instance containing the transformed value.
    * @example
    * const result = Try.execute(() => 5).map(value => value * 2);
-   * result.match(console.log, error => console.error(error.message)); // 10
+   * result.fold({ ifSuccess: console.log, ifFailure: error => console.error(error.message) }); // 10
    */
   abstract map<U>(transform: (value: T) => U): Try<U>;
 
@@ -97,7 +98,7 @@ abstract class Try<T> implements Monad<T>, Matchable<T, Error>, Futurizable<T> {
    * @returns {Try<U>} The result of the transformation function.
    * @example
    * const result = Try.execute(() => 5).flatMap(value => Try.execute(() => value * 2));
-   * result.match(console.log, error => console.error(error.message)); // 10
+   * result.fold({ ifSuccess: console.log, ifFailure: error => console.error(error.message) }); // 10
    */
   abstract flatMap<U>(transform: (value: T) => Try<U>): Try<U>;
 
@@ -125,35 +126,20 @@ abstract class Try<T> implements Monad<T>, Matchable<T, Error>, Futurizable<T> {
    * Unwraps the value contained in this `Try` instance by applying the appropriate handler for both Success and Failure cases.
    * @template T The type of the value.
    * @template U The type of the result.
-   * @param {(value: T) => U} ifSuccess The function to call if this is a `Success` instance.
-   * @param {(error: Error) => U} ifFailure The function to call if this is a `Failure` instance.
-   * @returns {U} The result of the matching function.
-   * @example
-   * const result = Try.execute(() => JSON.parse('invalid json'));
-   * result.match(console.log, error => console.error(error.message)); // Unexpected token i in JSON at position 0
-   */
-  abstract match<U>(ifSuccess: (value: T) => U, ifFailure: (error: Error) => U): U;
-
-  /**
-   * Unwraps the value contained in this `Try` instance by applying the appropriate handler for both Success and Failure cases.
-   * @template T The type of the value.
-   * @template U The type of the result.
    * @param {FoldingTry<T, U>} folding The folding object containing the functions to call for each case.
-   * @returns {U} The result of the matching function.
+   * @returns {U} The result of the folding function.
    * @example
    * const result = Try.success(5);
    * result.fold({ ifSuccess: console.log, ifFailure: (error) => console.error(error.message) }); // 5
    */
-  fold<U>(folding: FoldingTry<T, U>): U {
-    return this.match(folding.ifSuccess, folding.ifFailure);
-  }
+  abstract fold<U>(folding: FoldingTry<T, U>): U;
 
   /**
    * Checks if this is a `Success` instance.
    * @returns {boolean} `true` if this is a `Success` instance, otherwise `false`.
    * @example
    * const result = Try.execute(() => 5);
-   * result.match(value => console.log(value.isSuccess()), error => console.error(error.message)); // true
+   * result.isSuccess(); // true
    */
   abstract isSuccess(): this is Success<T>;
 
@@ -162,7 +148,7 @@ abstract class Try<T> implements Monad<T>, Matchable<T, Error>, Futurizable<T> {
    * @returns {boolean} `true` if this is a `Failure` instance, otherwise `false`.
    * @example
    * const result = Try.execute(() => { throw new Error('failure'); });
-   * result.match(console.log, error => console.error(error.isFailure()); // true
+   * result.isFailure(); // true
    */
   abstract isFailure(): this is Failure<T>;
 
@@ -175,7 +161,7 @@ abstract class Try<T> implements Monad<T>, Matchable<T, Error>, Futurizable<T> {
    * console.log(result.getOrElse(0)); // 5
    *
    * const failure = Try.execute(() => { throw new Error('failure'); });
-   * console.log(failure.getOrElse(0)); // 0
+   * failure.getOrElse(0); // 0
    */
   abstract getOrElse(value: T): T;
 
@@ -188,7 +174,7 @@ abstract class Try<T> implements Monad<T>, Matchable<T, Error>, Futurizable<T> {
    * console.log(result.getOrThrow()); // 5
    *
    * const failure = Try.execute(() => { throw new Error('failure'); });
-   * console.log(failure.getOrThrow()); // Error: failure
+   * failure.getOrThrow(); // Error: failure
    */
   abstract getOrThrow(): T;
 
@@ -237,8 +223,8 @@ class Success<T> extends Try<T> {
     return this;
   }
 
-  match<U>(ifSuccess: (value: T) => U, _: (_: never) => U): U {
-    return ifSuccess(this.value);
+  fold<U>(folding: FoldingTry<T, U>): U {
+    return folding.ifSuccess(this.value);
   }
 
   isSuccess(): this is Success<T> {
@@ -297,8 +283,8 @@ class Failure<T = Error> extends Try<T> {
     return this;
   }
 
-  match<U>(_: (_: never) => never, ifFailure: (error: Error) => U): U {
-    return ifFailure(this.error);
+  fold<U>(folding: FoldingTry<T, U>): U {
+    return folding.ifFailure(this.error);
   }
 
   isSuccess(): this is Success<T> {

@@ -1,19 +1,16 @@
 import { Nullable, Present } from '../types';
 import { Monad } from '../monad';
-import { Matchable } from '../match';
 import { Futurizable } from '../futurizable';
 import { Future } from '../future';
+import { Foldable, Folding } from '../fold';
 
-interface FoldingOption<T, U> {
-  ifSome: (value: T) => U;
-  ifNone: (_: undefined) => U;
-}
+type FoldingOption<T, U> = Folding<'Option', T, undefined, U>;
 
 /**
  * Abstract class representing an optional value.
  * @template T The type of the value.
  */
-abstract class Option<T> implements Monad<T>, Matchable<T, undefined>, Futurizable<T> {
+abstract class Option<T> implements Monad<T>, Futurizable<T>, Foldable<T, undefined> {
   /**
    * Creates an `Option` instance from a nullable value.
    * @template T The type of the value.
@@ -21,10 +18,10 @@ abstract class Option<T> implements Monad<T>, Matchable<T, undefined>, Futurizab
    * @returns {Option<T>} A `Some` instance if the value is not null or undefined, otherwise a `None` instance.
    * @example
    * const some = Option.of(5);
-   * some.match(console.log, () => console.log('none')); // 5
+   * some.fold({ ifSome: console.log, ifNone: () => console.log('none') }); // 5
    *
    * const none = Option.of(null);
-   * none.match(console.log, () => console.log('none')); // none
+   * none.fold({ ifSome: console.log, ifNone: () => console.log('none') }); // none
    */
   static of<T>(value: Nullable<T>): Option<T> {
     if (value == null) {
@@ -40,7 +37,7 @@ abstract class Option<T> implements Monad<T>, Matchable<T, undefined>, Futurizab
    * @returns {Some<T>} A `Some` instance of the value
    * @example
    * const some = Option.some(5);
-   * some.match(console.log, () => console.log('none')); // 5
+   * some.fold({ ifSome: console.log, ifNone: () => console.log('none') }); // 5
    */
   static some<T>(value: Present<T>): Option<T> {
     return new Some(value);
@@ -51,27 +48,31 @@ abstract class Option<T> implements Monad<T>, Matchable<T, undefined>, Futurizab
    * @returns {None} A `None` instance.
    * @example
    * const none = Option.none();
-   * none.match(console.log, () => console.log('none')); // none
+   * none.fold({ ifSome: console.log, ifNone: () => console.log('none') }); // none
    */
   static none<T>(): Option<T> {
     return new None();
   }
 
   /**
-   * Creates an `Option` instance from a `Matchable` instance.
+   * Creates an `Option` instance from a `Foldable` instance.
    * @template T The type of the value.
-   * @param {Matchable<T, unknown>} matchable The matchable instance.
-   * @returns {Option<T>} A `Some` instance if the matchable contains a value, otherwise a `None` instance.
+   * @param {Foldable<T, unknown>} foldable The foldable instance.
+   * @returns {Option<T>} A `Some` instance if the foldable contains a value, otherwise a `None` instance.
    * @example
    * const either = Either.right(5);
    * const option = Option.from(either);
-   * option.match(console.log, () => console.log('none')); // 5
+   * option.fold({ ifSome: console.log, ifNone: () => console.log('none') }); // 5
    */
-  static from<T>(matchable: Matchable<T, unknown>): Option<T> {
-    return matchable.match<Option<T>>(
-      (value: T) => Option.of(value),
-      () => Option.of<T>(undefined)
-    );
+  static from<T>(foldable: Foldable<T, unknown>): Option<T> {
+    return foldable.fold<Option<T>>({
+      ifSome: (value: T) => Option.of(value),
+      ifNone: () => Option.none(),
+      ifSuccess: (value: T) => Option.of(value),
+      ifFailure: () => Option.none(),
+      ifRight: (value: T) => Option.of(value),
+      ifLeft: () => Option.none(),
+    });
   }
 
   /**
@@ -80,10 +81,10 @@ abstract class Option<T> implements Monad<T>, Matchable<T, undefined>, Futurizab
    * @returns {T} The value if present, otherwise the default value.
    * @example
    * const some = Option.of(5);
-   * console.log(some.getOrElse(0)); // 5
+   * some.getOrElse(0); // 5
    *
    * const none = Option.of(null);
-   * console.log(none.getOrElse(0)); // 0
+   * none.getOrElse(0); // 0
    */
   abstract getOrElse(otherValue: T): T;
 
@@ -93,10 +94,10 @@ abstract class Option<T> implements Monad<T>, Matchable<T, undefined>, Futurizab
    * @returns {Option<T>} A `Some` instance if the value matches the predicate, otherwise a `None` instance.
    * @example
    * const some = Option.of(5).filter(value => value > 3);
-   * some.match(console.log, () => console.log('none')); // 5
+   * some.fold({ ifSome: console.log, ifNone: () => console.log('none') }); // 5
    *
    * const none = Option.of(2).filter(value => value > 3);
-   * none.match(console.log, () => console.log('none')); // none
+   * none.fold({ ifSome: console.log, ifNone: () => console.log('none') }); // none
    */
   abstract filter(predicate: (value: T) => boolean): Option<T>;
 
@@ -108,7 +109,7 @@ abstract class Option<T> implements Monad<T>, Matchable<T, undefined>, Futurizab
    * @returns {Option<U>} A new `Option` instance containing the transformed value.
    * @example
    * const some = Option.of(5).map(value => value * 2);
-   * some.match(console.log, () => console.log('none')); // 10
+   * some.fold({ ifSome: console.log, ifNone: () => console.log('none') }); // 10
    */
   abstract map<U>(transform: (value: T) => U): Option<U>;
 
@@ -120,7 +121,7 @@ abstract class Option<T> implements Monad<T>, Matchable<T, undefined>, Futurizab
    * @returns {Option<U>} The result of the transformation function.
    * @example
    * const some = Option.of(5).flatMap(value => Option.of(value * 2));
-   * some.match(console.log, () => console.log('none')); // 10
+   * some.fold({ ifSome: console.log, ifNone: () => console.log('none') }); // 10
    */
   abstract flatMap<U>(transform: (value: T) => Option<U>): Option<U>;
 
@@ -147,38 +148,20 @@ abstract class Option<T> implements Monad<T>, Matchable<T, undefined>, Futurizab
    * Unwraps the value contained in this `Option` instance by applying the appropriate handler for both Some and None cases.
    * @template T The type of the value.
    * @template U The type of the result.
-   * @param {(value: T) => U} ifSome The function to call if this is a `Some` instance.
-   * @param {(_: undefined) => U} ifNone The function to call if this is a `None` instance.
-   * @returns {U} The result of the matching function.
-   * @example
-   * const some = Option.of(5);
-   * some.match(console.log, () => console.log('none')); // 5
-   *
-   * const none = Option.of(null);
-   * none.match(console.log, () => console.log('none')); // none
-   */
-  abstract match<U>(ifSome: (value: T) => U, ifNone: (_: undefined) => U): U;
-
-  /**
-   * Unwraps the value contained in this `Option` instance by applying the appropriate handler for both Some and None cases.
-   * @template T The type of the value.
-   * @template U The type of the result.
    * @param {FoldingOption<T, U>} folding The folding object containing the functions to call for each case.
-   * @returns {U} The result of the matching function.
+   * @returns {U} The result of the folding function.
    * @example
    * const result = Option.some(5);
    * result.fold({ ifSome: console.log, ifNone: () => console.error('Value is empty') }); // 5
    */
-  fold<U>(folding: FoldingOption<T, U>): U {
-    return this.match(folding.ifSome, folding.ifNone);
-  }
+  abstract fold<U>(folding: FoldingOption<T, U>): U;
 
   /**
    * Checks if this is a `Some` instance.
    * @returns {boolean} `true` if this is a `Some` instance, otherwise `false`.
    * @example
    * const some = Option.of(5);
-   * some.match(value => console.log(value.isSome()), () => console.log('none')); // true
+   * some.isSome(); // true
    */
   abstract isSome(): this is Some<T>;
 
@@ -187,7 +170,7 @@ abstract class Option<T> implements Monad<T>, Matchable<T, undefined>, Futurizab
    * @returns {boolean} `true` if this is a `None` instance, otherwise `false`.
    * @example
    * const none = Option.of(null);
-   * none.match(console.log, none => console.log(none.isNone())); // true
+   * none.isNone(); // true
    */
   abstract isNone(): this is None<T>;
 
@@ -245,8 +228,8 @@ class Some<T> extends Option<T> {
     return this;
   }
 
-  match<U>(some: (value: T) => U, _: (_: never) => never): U {
-    return some(this.value);
+  fold<U>(folding: FoldingOption<T, U>): U {
+    return folding.ifSome(this.value);
   }
 
   isNone(): this is None<T> {
@@ -292,8 +275,8 @@ class None<T> extends Option<T> {
     return this;
   }
 
-  match<U>(_: (_: never) => never, none: (noneValue: undefined) => U): U {
-    return none(undefined);
+  fold<U>(folding: FoldingOption<T, U>): U {
+    return folding.ifNone(undefined);
   }
 
   isNone(): this is None<T> {

@@ -29,8 +29,8 @@ describe('Either monad', () => {
   });
 
   it.each([
-    { type: 'Right', either: Either.right(2), closure: (x: number) => x, expected: Either.right(2) },
-    { type: 'Left', either: Either.left(2), closure: (x: number) => x * 2, expected: Either.left(4) },
+    { type: 'Right', either: Either.right<number, number>(2), closure: (x: number) => x, expected: Either.right(2) },
+    { type: 'Left', either: Either.left<number, number>(2), closure: (x: number) => x * 2, expected: Either.left(4) },
   ])('$type should handle mapLeft operation correctly', ({ either, closure, expected }) => {
     expect(either.mapLeft(closure)).toEqual(expected);
   });
@@ -47,7 +47,7 @@ describe('Either monad', () => {
   it.each([
     {
       type: 'Right',
-      either: Either.right(2),
+      either: Either.right<number, number>(2),
       fr: (x: number) => x,
       fl: (x: number) => x.toString(),
       expected: 2,
@@ -62,7 +62,7 @@ describe('Either monad', () => {
   it.each([
     {
       type: 'Left',
-      either: Either.left('Some Error'),
+      either: Either.left<string, string>('Some Error'),
       fr: (x: string) => x,
       fl: (error: string) => `Error: ${error}`,
       expected: 'Error: Some Error',

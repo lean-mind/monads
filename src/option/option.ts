@@ -4,6 +4,11 @@ import { Matchable } from '../match';
 import { Futurizable } from '../futurizable';
 import { Future } from '../future';
 
+interface FoldingOption<T, U> {
+  ifSome: (value: T) => U;
+  ifNone: (_: undefined) => U;
+}
+
 /**
  * Abstract class representing an optional value.
  * @template T The type of the value.
@@ -153,6 +158,20 @@ abstract class Option<T> implements Monad<T>, Matchable<T, undefined>, Futurizab
    * none.match(console.log, () => console.log('none')); // none
    */
   abstract match<U>(ifSome: (value: T) => U, ifNone: (_: undefined) => U): U;
+
+  /**
+   * Unwraps the value contained in this `Option` instance by applying the appropriate handler for both Some and None cases.
+   * @template T The type of the value.
+   * @template U The type of the result.
+   * @param {FoldingOption<T, U>} folding The folding object containing the functions to call for each case.
+   * @returns {U} The result of the matching function.
+   * @example
+   * const result = Option.some(5);
+   * result.fold({ ifSome: console.log, ifNone: () => console.error('Value is empty') }); // 5
+   */
+  fold<U>(folding: FoldingOption<T, U>): U {
+    return this.match(folding.ifSome, folding.ifNone);
+  }
 
   /**
    * Checks if this is a `Some` instance.

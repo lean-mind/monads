@@ -123,6 +123,19 @@ abstract class Either<L, R> implements Monad<R>, Matchable<R, L>, Futurizable<R>
   abstract flatMapLeft<T>(transform: (l: L) => Either<T, R>): Either<T, R>;
 
   /**
+   * Recovers from an error by transforming the left value into a right value.
+   * @template L The type of the left value.
+   * @template R The type of the right value.
+   * @template T The type of the new left value.
+   * @param {(l: L) => Either<T, R>} transform The transformation function.
+   * @returns {Either<T, R>} A new `Either` instance containing the transformed value.
+   * @example
+   * const result = Either.left('error').recover(value => Either.right(`Recovered: ${value}`));
+   * result.match(console.log, console.error); // Recovered: error
+   */
+  abstract recover<T>(transform: (l: L) => Either<T, R>): Either<T, R>;
+
+  /**
    * Executes an action if this is a `Right` instance.
    * @template L The type of the left value.
    * @template R The type of the right value.
@@ -221,6 +234,10 @@ class Left<L, R> extends Either<L, R> {
     return transform(this.value);
   }
 
+  recover<T>(transform: (l: L) => Either<T, never>): Either<T, never> {
+    return transform(this.value);
+  }
+
   onRight(_: (r: never) => void): Either<L, never> {
     return new Left(this.value);
   }
@@ -274,6 +291,10 @@ class Right<L, R> extends Either<L, R> {
   }
 
   flatMapLeft(_: (l: never) => Either<never, R>): Either<never, R> {
+    return new Right(this.value);
+  }
+
+  recover<T>(_: (l: never) => Either<T, R>): Either<T, R> {
     return new Right(this.value);
   }
 

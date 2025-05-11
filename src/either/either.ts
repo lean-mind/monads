@@ -218,7 +218,7 @@ class Left<L, R> extends Either<L, R> {
     super();
   }
 
-  map(_: (r: never) => never): Either<L, never> {
+  map<T>(_: (r: R) => T): Either<L, T> {
     return new Left(this.value);
   }
 
@@ -226,7 +226,7 @@ class Left<L, R> extends Either<L, R> {
     return new Left(transform(this.value));
   }
 
-  flatMap(_: (r: never) => Either<L, never>): Either<L, never> {
+  flatMap<T>(_: (r: R) => Either<L, T>): Either<L, T> {
     return new Left(this.value);
   }
 
@@ -238,16 +238,16 @@ class Left<L, R> extends Either<L, R> {
     return transform(this.value);
   }
 
-  onRight(_: (r: never) => void): Either<L, never> {
-    return new Left(this.value);
+  onRight(_: (r: R) => void): Either<L, R> {
+    return this;
   }
 
-  onLeft(action: (l: L) => void): Either<L, never> {
+  onLeft(action: (l: L) => void): Either<L, R> {
     action(this.value);
-    return new Left(this.value);
+    return this;
   }
 
-  match<T>(_: (_: never) => never, ifLeft: (l: L) => T): T {
+  match<T>(_: (_: R) => T, ifLeft: (l: L) => T): T {
     return ifLeft(this.value);
   }
 
@@ -282,7 +282,7 @@ class Right<L, R> extends Either<L, R> {
     return new Right(transform(this.value));
   }
 
-  mapLeft(_: (l: L) => never): Either<never, R> {
+  mapLeft<T>(_: (l: L) => T): Either<T, R> {
     return new Right(this.value);
   }
 
@@ -290,24 +290,24 @@ class Right<L, R> extends Either<L, R> {
     return transform(this.value);
   }
 
-  flatMapLeft(_: (l: never) => Either<never, R>): Either<never, R> {
+  flatMapLeft<T>(_: (l: L) => Either<T, R>): Either<T, R> {
     return new Right(this.value);
   }
 
-  recover<T>(_: (l: never) => Either<T, R>): Either<T, R> {
+  recover<T>(_: (l: L) => Either<T, R>): Either<T, R> {
     return new Right(this.value);
   }
 
-  onRight(action: (r: R) => void): Either<never, R> {
+  onRight(action: (r: R) => void): Either<L, R> {
     action(this.value);
-    return new Right(this.value);
+    return this;
   }
 
-  onLeft(_: (l: never) => void): Either<never, R> {
-    return new Right(this.value);
+  onLeft(_: (l: L) => void): Either<L, R> {
+    return this;
   }
 
-  match<T>(ifRight: (r: R) => T, _: (_: never) => never): T {
+  match<T>(ifRight: (r: R) => T, _: (_: L) => T): T {
     return ifRight(this.value);
   }
 

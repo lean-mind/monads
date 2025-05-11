@@ -104,4 +104,14 @@ describe('Either monad', () => {
     Either.right(2).onLeft(nonCallableAction);
     expect(nonCallableAction).not.toHaveBeenCalled();
   });
+
+  it('should recover from a Left value', () => {
+    const recoverIfEven = (x: number): Either<string, string> =>
+      x % 2 === 0 ? Either.right('Even number') : Either.left('Odd number');
+    const leftEven = Either.left<number, string>(2);
+    const leftOdd = Either.left<number, string>(3);
+
+    expect(leftEven.recover(recoverIfEven)).toEqual(Either.right('Even number'));
+    expect(leftOdd.recover(recoverIfEven)).toEqual(Either.left('Odd number'));
+  });
 });

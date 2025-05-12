@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<svg baseProfile="tiny" height="1200" version="1.2" width="1200" xmlns="http://www.w3.org/2000/svg"
+>
+    <defs/>
+    <circle cx="600" cy="600" fill="#FAF3DD" stroke="black" stroke-width="10" r="590"/>
+    <circle cx="600" cy="600" fill="black" r="50"/>
+</svg>

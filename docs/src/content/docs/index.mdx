@@ -1,0 +1,55 @@
+---
+title: Monads for TypeScript
+description: Simplify data and error handling with functional structures like Either, Option, Future, and more.
+template: splash
+hero:
+    tagline: Simplify your code with functional monads
+    image:
+        file: ../../assets/monads-crema.webp
+    actions:
+        - text: Get Started
+          link: /monads-docs/how-to-use/installation
+          icon: right-arrow
+        - text: View on GitHub
+          link: https://github.com/lean-mind/monads
+          icon: external
+---
+
+import {Card, CardGrid, LinkCard} from '@astrojs/starlight/components';
+
+## Why use this library?
+
+<CardGrid>
+    <Card title="Error Handling" icon="seti:lock">
+        Simplify error handling with structures like Either and Try.
+    </Card>
+    <Card title="Cleaner Code" icon="seti:tsconfig">
+        Promote a functional approach to improve readability and maintainability.
+    </Card>
+</CardGrid>
+
+## Available Monads
+
+<CardGrid>
+    <LinkCard title="Either" description="Represents a value that can be a success or an error." href="/monads-docs/either/usage/"/>
+    <LinkCard title="Option" description="Safely handle optional values." href="/monads-docs/option/usage/"/>
+    <LinkCard title="Future" description="Work with asynchronous values." href="/monads-docs/future/usage/"/>
+    <LinkCard title="IO" description="Encapsulates side-effectful computations in a lazy container." href="/monads-docs/io/usage/"/>
+    <LinkCard title="Try" description="Represents computations that may throw exceptions, yielding Success or Failure." href="/monads-docs/try/usage/"/>
+</CardGrid>
+
+## Quick Example
+
+```typescript
+import { Either } from '@leanmind/monads';
+
+const findUser = (id: number): User => {
+  if (id === 42) {
+    return { id: 42, name: 'John Doe' };
+  }
+  throw new Error('User with id ${id} not found');
+};
+
+const right = Either.catch<User>(() => findUser(42)); // Right({ id: 42, name: 'John Doe' })
+const left = Either.catch<User>(() => findUser(1)); // Left(Error('User with id 1 not found'))
+```

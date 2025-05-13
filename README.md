@@ -18,6 +18,13 @@ This is a set of implementations of monads in TypeScript with OOP perspective.
       * [checking if an Either is Right or Left](#checking-if-an-either-is-right-or-left)
       * [Chaining operations](#chaining-operations)
       * [Handling errors](#handling-errors)
+      * [Asynchronous Operations (AsyncEither)](#asynchronous-operations-asynceither)
+        * [Creating an AsyncEither](#creating-an-asynceither)
+        * [Mapping over an AsyncEither](#mapping-over-an-asynceither)
+        * [Running side effects](#running-side-effects-1)
+        * [Folding an AsyncEither](#folding-an-asynceither)
+        * [Working with Promises](#working-with-promises)
+        * [Handling asynchronous errors](#handling-asynchronous-errors)
   * [Option Monad](#option-monad)
     * [Usage](#usage-1)
       * [Creating an Option](#creating-an-option)
@@ -26,14 +33,14 @@ This is a set of implementations of monads in TypeScript with OOP perspective.
       * [Mapping over an Option](#mapping-over-an-option)
         * [Using `flatMap`](#using-flatmap)
         * [Using `map`](#using-map)
-      * [Running side effects](#running-side-effects-1)
+      * [Running side effects](#running-side-effects-2)
       * [Folding an Option](#folding-an-option)
       * [Checking if an Option is Some or None](#checking-if-an-option-is-some-or-none)
   * [Try Monad](#try-monad)
     * [Usage](#usage-2)
       * [Using `map`](#using-map-1)
       * [Using `flatMap`](#using-flatmap-1)
-      * [Running side effects](#running-side-effects-2)
+      * [Running side effects](#running-side-effects-3)
       * [Retrieving the value](#retrieving-the-value)
       * [Folding a Try](#folding-a-try)
       * [Handling errors in Infrastructure code](#handling-errors-in-infrastructure-code)
@@ -250,6 +257,174 @@ console.log(result); // 'Result: 10'
 In this example, the divide function returns an `Either` that represents the result of the division or an error if the
 division is by zero. The result is then transformed and folded to produce a final `string`.
 
+#### Asynchronous Operations (AsyncEither)
+
+`AsyncEither` is the asynchronous variant of `Either`, which wraps a Promise that resolves to an Either. It provides
+similar functionality to synchronous `Either` but works with asynchronous operations.
+
+##### Creating an AsyncEither
+
+You can create an `AsyncEither` using the static methods `AsyncEither.fromPromise`, `AsyncEither.fromSafePromise`, and
+`AsyncEither.fromSync`.
+
+```typescript
+import { AsyncEither, Either } from '@leanmind/monads';
+
+// Creating an AsyncEither from a Promise with error handling
+const fromPromise = AsyncEither.fromPromise(
+  fetch('https://api.example.com/users/1').then(res => res.json()),
+  err => `API Error: ${err}`
+); // AsyncEither<string, User>
+
+// Creating an AsyncEither from a Promise that cannot fail
+const fromSafePromise = AsyncEither.fromSafePromise(
+  Promise.resolve(42)
+); // AsyncEither<never, number>
+
+// Converting a synchronous Either to an AsyncEither
+const fromSync = AsyncEither.fromSync(Either.right(42)); // AsyncEither<never, number>
+```
+
+##### Mapping over an AsyncEither
+
+Similar to `Either`, you can use `map`, `mapLeft`, `flatMap`, and `flatMapLeft` methods to transform values
+asynchronously:
+
+```typescript
+import { AsyncEither, Either } from '@leanmind/monads';
+
+// Using map
+const mapped = await AsyncEither.fromSync(Either.right(42))
+  .map(x => x * 2); // AsyncEither<never, 84>
+
+// Using mapLeft
+const mappedLeft = await AsyncEither.fromSync(Either.left('error'))
+  .mapLeft(err => `Transformed: ${err}`); // AsyncEither<'Transformed: error', never>
+
+// Using flatMap with async operations
+const flatMapped = await AsyncEither.fromSync(Either.right(42))
+  .flatMap(x => AsyncEither.fromPromise(
+    Promise.resolve(x + 1),
+    err => `Error: ${err}`
+  )); // AsyncEither<string, 43>
+
+// Using flatMapLeft
+const flatMappedLeft = await AsyncEither.fromSync(Either.left('error'))
+  .flatMapLeft(err => AsyncEither.fromSync(Either.left(`${err}_handled`))); // AsyncEither<'error_handled', never>
+```
+
+Note that async transformations are supported for both map and flatMap operations:
+
+```typescript
+import { AsyncEither } from '@leanmind/monads';
+
+const asyncMapped = await AsyncEither.fromSync(Either.right(42))
+  .map(async x => {
+    const result = await someAsyncOperation(x);
+    return result * 2;
+  }); // AsyncEither<never, number>
+```
+
+##### Running side effects
+
+While not explicitly shown in the provided code, you can use the `fold` method with appropriate handlers to perform side
+effects:
+
+```typescript
+import { AsyncEither, Either } from '@leanmind/monads';
+
+const asyncEither = AsyncEither.fromSync(Either.right(42));
+
+// Execute side effects after resolving the AsyncEither
+await asyncEither.then(either => {
+  either.onRight(value => console.log(`Success: ${value}`)); // Logs "Success: 42"
+  either.onLeft(error => console.error(`Error: ${error}`)); // Not executed
+});
+```
+
+##### Folding an AsyncEither
+
+You can use the `fold` method to handle both `Right` and `Left` cases and unwrap the result:
+
+```typescript
+import { AsyncEither, Either } from '@leanmind/monads';
+
+const asyncEither = AsyncEither.fromSync(Either.right(42));
+const result = await asyncEither.fold({
+  ifRight: x => `Success: ${x}`,
+  ifLeft: err => `Error: ${err}`,
+}); // 'Success: 42'
+
+const asyncEitherError = AsyncEither.fromSync(Either.left('failed'));
+const errorResult = await asyncEitherError.fold({
+  ifRight: x => `Success: ${x}`,
+  ifLeft: err => `Error: ${err}`,
+}); // 'Error: failed'
+```
+
+##### Working with Promises
+
+`AsyncEither` implements the `PromiseLike` interface, allowing it to be used in Promise chains and with `await`:
+
+```typescript
+import { AsyncEither, Either } from '@leanmind/monads';
+
+// Using await to get the wrapped Either
+const asyncEither = AsyncEither.fromSync(Either.right(42));
+const either = await asyncEither; // Either<never, 42>
+
+// Using in Promise chain
+AsyncEither.fromPromise(fetchUser(1), err => `Failed to fetch: ${err}`)
+  .then(either => {
+    either.fold({
+      ifRight: user => console.log(`User: ${user.name}`),
+      ifLeft: err => console.error(err)
+    });
+  });
+```
+
+##### Handling asynchronous errors
+
+Here's a complete example of handling asynchronous operations with error handling:
+
+```typescript
+import { AsyncEither } from '@leanmind/monads';
+
+async function fetchUserData(userId: string) {
+  // Create an AsyncEither from a Promise that might fail
+  return AsyncEither.fromPromise(
+    fetch(`https://api.example.com/users/${userId}`)
+      .then(response => {
+        if (!response.ok) {
+          throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+        return response.json();
+      }),
+    error => `Failed to fetch user: ${error.message}`
+  );
+}
+
+// Usage
+async function displayUserInfo(userId: string) {
+  const userResult = await fetchUserData(userId)
+    .map(user => ({
+      displayName: `${user.firstName} ${user.lastName}`,
+      email: user.email
+    }))
+    .fold({
+      ifRight: userInfo => `User: ${userInfo.displayName} (${userInfo.email})`,
+      ifLeft: error => `Error: ${error}`
+    });
+
+  console.log(userResult);
+}
+
+displayUserInfo('123'); // Either 'User: John Doe (john@example.com)' or 'Error: Failed to fetch user: ...'
+```
+
+This example demonstrates how `AsyncEither` helps with handling asynchronous operations that might fail, allowing for
+clean error handling and functional transformations of the results.
+
 ## Option Monad
 
 The `Option` monad represents a value that may or may not be present.
@@ -293,8 +468,6 @@ You can use the `filter` method to keep the `Some` value if it satisfies a predi
 ```typescript
 import { Option } from '@leanmind/monads';
 
-m
-
 const some = Option.of(42).filter(x => x > 40); // Some(42)
 const none = Option.of(42).filter(x => x > 50); // None
 ```
@@ -307,8 +480,6 @@ You can use the `flatMap` or `map` method to transform the `Some` value.
 
 ```typescript
 import { Option } from '@leanmind/monads';
-
-m
 
 const some = Option.of(42).flatMap(x => Option.of(x + 1)); // Some(43)
 const none = Option.of(null).flatMap(x => Option.of(x + 1)); // None
@@ -411,8 +582,6 @@ You can use the `map` method to transform the value inside a `Success`.
 
 ```typescript
 import { Try } from '@leanmind/monads';
-
-m
 
 const success = Try.success(42).map(x => x + 1); // Success(43)
 ```

@@ -3,7 +3,7 @@ import { Future } from '../future';
 import { Futurizable } from '../futurizable';
 import { Foldable, Folding } from '../fold';
 
-type FoldingEither<R, L, T> = Folding<'Either', R, L, T>;
+export type FoldingEither<R, L, T> = Folding<'Either', R, L, T>;
 
 /**
  * Abstract class representing a value that can be one of two possible types.

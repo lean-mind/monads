@@ -1,7 +1,7 @@
 import { Monad } from '../monad';
 import { Futurizable } from '../futurizable';
 import { Future } from '../future';
-import { Foldable, Folding } from '../fold';
+import { Folding, Railway } from '../railway';
 
 type FoldingTry<T, U> = Folding<'Try', T, Error, U>;
 
@@ -9,7 +9,7 @@ type FoldingTry<T, U> = Folding<'Try', T, Error, U>;
  * Abstract class representing a computation that may either result in a value or an error.
  * @template T The type of the value.
  */
-abstract class Try<T> implements Monad<T>, Futurizable<T>, Foldable<T, Error> {
+abstract class Try<T> implements Monad<T>, Futurizable<T>, Railway<T, Error> {
   /**
    * Executes a function and returns a `Try` instance.
    * @template T The type of the value.
@@ -56,7 +56,7 @@ abstract class Try<T> implements Monad<T>, Futurizable<T>, Foldable<T, Error> {
   /**
    * Creates a `Try` instance from a `Foldable` instance.
    * @template T The type of the value.
-   * @param {Foldable<T, unknown>} foldable The foldable instance.
+   * @param {Railway<T, unknown>} foldable The foldable instance.
    * @returns {Try<T>} A `Success` instance if the foldable contains a value, otherwise a `Failure` instance.
    * @example
    * const some = Option.of(5);
@@ -67,7 +67,7 @@ abstract class Try<T> implements Monad<T>, Futurizable<T>, Foldable<T, Error> {
    * const failure = Try.from(none);
    * failure.fold({ ifSuccess: console.log, ifFailure: error => console.error(error.message) }); // Empty value
    */
-  static from<T>(foldable: Foldable<T, unknown>): Try<T> {
+  static from<T>(foldable: Railway<T, unknown>): Try<T> {
     return foldable.fold<Try<T>>({
       ifSuccess: (value: T) => Try.success(value),
       ifFailure: (error: unknown) => Try.failure<T>(error as Error),
@@ -121,6 +121,30 @@ abstract class Try<T> implements Monad<T>, Futurizable<T>, Foldable<T, Error> {
    * const result = Try.execute(() => { throw new Error('failure'); }).onFailure(error => console.error(error.message)); // failure
    */
   abstract onFailure(action: (error: Error) => void): Try<T>;
+
+  /**
+   * Transforms a `Success` into another `Try` instance.
+   * @template T The type of the value.
+   * @template R The type of the transformed value.
+   * @param {(value: T) => Try<R>} transform The transformation function.
+   * @returns {Try<R>} The result of the transformation function.
+   * @example
+   * const result = Try.execute(() => 5).andThen(value => Try.execute(() => value * 2));
+   * result.fold({ ifSuccess: console.log, ifFailure: error => console.error(error.message) }); // 10
+   */
+  abstract andThen<R>(transform: (value: T) => Try<R>): Try<R>;
+
+  /**
+   * Transforms a `Failure` into another `Try` instance.
+   * @template T The type of the value.
+   * @template R The type of the transformed value.
+   * @param {(error: Error) => Try<R>} transform The transformation function.
+   * @returns {Try<R>} The result of the transformation function.
+   * @example
+   * const result = Try.execute(() => { throw new Error('failure'); }).orElse(error => Try.execute(() => 0));
+   * result.fold({ ifSuccess: console.log, ifFailure: error => console.error(error.message) }); // 0
+   */
+  abstract orElse(transform: (error: Error) => Try<T>): Try<T>;
 
   /**
    * Unwraps the value contained in this `Try` instance by applying the appropriate handler for both Success and Failure cases.
@@ -223,6 +247,14 @@ class Success<T> extends Try<T> {
     return this;
   }
 
+  andThen<R>(transform: (value: T) => Try<R>): Try<R> {
+    return transform(this.value);
+  }
+
+  orElse(_: (error: Error) => Try<T>): Try<T> {
+    return new Success(this.value);
+  }
+
   fold<U>(folding: FoldingTry<T, U>): U {
     return folding.ifSuccess(this.value);
   }
@@ -281,6 +313,14 @@ class Failure<T = Error> extends Try<T> {
   onFailure(action: (error: Error) => void): Try<T> {
     action(this.error);
     return this;
+  }
+
+  andThen<U>(_: (value: T) => Try<U>): Try<U> {
+    return new Failure<U>(this.error);
+  }
+
+  orElse(transform: (error: Error) => Try<T>): Try<T> {
+    return transform(this.error);
   }
 
   fold<U>(folding: FoldingTry<T, U>): U {

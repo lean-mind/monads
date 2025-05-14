@@ -1,5 +1,6 @@
-import { Either, FoldingEither } from './either';
+import { Either } from './either';
 import { Monad } from '../monad';
+import { AsyncRailway, Folding } from '../railway';
 
 /**
  * Class representing an asynchronous computation that may result in one of two possible types.
@@ -7,7 +8,7 @@ import { Monad } from '../monad';
  * @template L The type of the left value (usually an error).
  * @template R The type of the right value (usually a success).
  */
-export class AsyncEither<L, R> implements PromiseLike<Either<L, R>>, Monad<R> {
+export class AsyncEither<L, R> implements PromiseLike<Either<L, R>>, Monad<R>, AsyncRailway<R, L> {
   private readonly promise: Promise<Either<L, R>>;
 
   private constructor(promise: Promise<Either<L, R>>) {
@@ -136,23 +137,56 @@ export class AsyncEither<L, R> implements PromiseLike<Either<L, R>>, Monad<R> {
   }
 
   /**
-   * Unwraps the value contained in this AsyncEither instance by applying the appropriate handler for both Left and Right cases.
-   * @template R The type of the right value.
+   * Transforms the right value contained in this AsyncEither instance into another AsyncEither instance.
+   * Implementation of the andThen method from the AsyncRailway interface.
    * @template L The type of the left value.
-   * @template T The type of the result.
-   * @param {FoldingEither<R, L, T>} folding The folding object containing the functions to call for each case.
-   * @returns {Promise<T>} A Promise that resolves to the result of the folding function.
-   * @example
-   * const asyncEither = AsyncEither.fromSync(Either.right(5));
-   * const result = await asyncEither.fold({
-   *   ifRight: value => `Success: ${value}`,
-   *   ifLeft: error => `Error: ${error}`
-   * });
-   * console.log(result); // 'Success: 5'
+   * @template R The type of the right value.
+   * @template U The type of the new right value.
+   * @param {(value: R) => AsyncRailway<U, L> | Railway<U, L>} transform The transformation function.
+   * @returns {AsyncEither<L, U>} A new AsyncEither instance containing the result of the transformation.
    */
-  async fold<T>(folding: FoldingEither<R, L, T>): Promise<T> {
-    const either = await this.promise;
+  andThen<U>(transform: (value: R) => AsyncEither<L, U> | Either<L, U>): AsyncEither<L, U> {
+    return this.flatMap(transform);
+  }
+
+  /**
+   * Transforms the left value contained in this AsyncEither instance into another AsyncEither instance.
+   * @template L The type of the left value.
+   * @template R The type of the right value.
+   * @template U The type of the new left value.
+   * @param {(value: L) => AsyncRailway<R, U> | Railway<R, U>} transform The transformation function.
+   * @returns {AsyncEither<U, R>} A new AsyncEither instance containing the result of the transformation.
+   */
+  orElse<U>(transform: (value: L) => AsyncEither<U, R> | Either<U, R>): AsyncEither<U, R> {
+    return this.flatMapLeft(transform);
+  }
+
+  /**
+   * Applies the appropriate function from the folding object based on whether the Either resolves to a Left or Right.
+   * @template L The type of the left value.
+   * @template R The type of the right value.
+   * @template T The return type of the folding functions.
+   * @param {Folding<'Either', R, L, T>} folding The folding object with functions for handling Left and Right cases.
+   * @returns {Promise<T>} A promise that resolves to the result of the appropriate folding function.
+   */
+  async fold<T>(folding: Folding<'Either', R, L, T>): Promise<T> {
+    const either = await this;
     return either.fold(folding);
+  }
+
+  /**
+   * Adds a timeout to this AsyncEither.
+   * @param {number} ms Timeout in milliseconds.
+   * @param {() => L} onTimeout Function that returns the error value when timeout occurs.
+   * @returns {AsyncEither<L, R>} A new AsyncEither with timeout configured.
+   */
+  withTimeout(ms: number, onTimeout: () => L): AsyncEither<L, R> {
+    return new AsyncEither(
+      Promise.race([
+        this.promise,
+        new Promise<Either<L, R>>((resolve) => setTimeout(() => resolve(Either.left<L, R>(onTimeout())), ms)),
+      ])
+    );
   }
 
   /**

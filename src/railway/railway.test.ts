@@ -133,13 +133,13 @@ const orElseTestCases = [
   {
     type: 'Try Success',
     railway: Try.success(2),
-    operation: (x: number) => Try.failure(new Error('fail')),
+    operation: () => Try.failure(new Error('fail')),
     expected: Try.success(2),
   },
   {
     type: 'Try Failure',
     railway: Try.failure<number>(new Error('fail')),
-    operation: (x: number) => Try.failure(new Error('fail')),
+    operation: () => Try.failure(new Error('fail')),
     expected: Try.failure(new Error('fail')),
   },
   {

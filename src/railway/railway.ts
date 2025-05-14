@@ -1,4 +1,4 @@
-type Kind = 'Option' | 'Either' | 'Try';
+export type Kind = 'Option' | 'Either' | 'Try';
 
 type OptionFoldingKeys = ['ifSome', 'ifNone'];
 type EitherFoldingKeys = ['ifRight', 'ifLeft'];

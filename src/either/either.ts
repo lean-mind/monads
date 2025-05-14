@@ -1,7 +1,7 @@
 import { Monad } from '../monad';
 import { Future } from '../future';
 import { Futurizable } from '../futurizable';
-import { Foldable, Folding } from '../fold';
+import { Folding, Railway } from '../railway';
 
 export type FoldingEither<R, L, T> = Folding<'Either', R, L, T>;
 
@@ -10,7 +10,7 @@ export type FoldingEither<R, L, T> = Folding<'Either', R, L, T>;
  * @template L The type of the left value.
  * @template R The type of the right value.
  */
-abstract class Either<L, R> implements Monad<R>, Futurizable<R>, Foldable<R, L> {
+abstract class Either<L, R> implements Monad<R>, Futurizable<R>, Railway<R, L> {
   /**
    * Creates a `Right` instance.
    * @template L The type of the left value.
@@ -43,23 +43,23 @@ abstract class Either<L, R> implements Monad<R>, Futurizable<R>, Foldable<R, L> 
    * Creates an `Either` instance from a `Foldable` instance.
    * @template L The type of the left value.
    * @template R The type of the right value.
-   * @param {Foldable<R, L>} foldable The foldable instance.
-   * @returns {Either<L, R>} A `Right` instance if the foldable contains a right value, otherwise a `Left` instance.
+   * @param {Railway<R, L>} other Railway instance.
+   * @returns {Either<L, R>} A `Right` instance if the railway contains a successful value, otherwise a `Left` instance.
    * @example
    * const option = Option.of(5);
    * const either = Either.from(option);
    * either.fold({ ifRight: console.log, ifLeft: error => console.error(error.message) }); // 5
    */
-  static from<L, R>(foldable: Foldable<R, L>): Either<L, R> {
+  static from<L, R>(other: Railway<R, L>): Either<L, R> {
     const folding = {
-      ifRight: (value: R): Either<L, R> => Either.right<L, R>(value),
+      ifRight: (value: R) => Either.right<L, R>(value),
       ifLeft: (value: L) => Either.left<L, R>(value),
       ifSuccess: (value: R) => Either.right<L, R>(value),
       ifFailure: (value: L) => Either.left<L, R>(value),
       ifSome: (value: R) => Either.right<L, R>(value),
       ifNone: (value: L) => Either.left<L, R>(value),
     };
-    return foldable.fold<Either<L, R>>(folding);
+    return other.fold<Either<L, R>>(folding);
   }
 
   /**
@@ -104,9 +104,9 @@ abstract class Either<L, R> implements Monad<R>, Futurizable<R>, Foldable<R, L> 
    */
   abstract mapLeft<T>(transform: (l: L) => T): Either<T, R>;
 
-  abstract flatMap<T>(transform: (r: R) => Either<L, T>): Either<L, T>;
   /**
    * Transforms the right value contained in this `Either` instance into another `Either` instance.
+   * @template L The type of the left value.
    * @template R The type of the right value.
    * @template T The type of the transformed value.
    * @param {(r: R) => Either<L, T>} transform The transformation function.
@@ -115,6 +115,7 @@ abstract class Either<L, R> implements Monad<R>, Futurizable<R>, Foldable<R, L> 
    * const result = Either.right(5).flatMap(value => Either.right(value * 2));
    * result.fold({ ifRight: console.log, ifLeft: error => console.error(error.message) }); // 10
    */
+  abstract flatMap<T>(transform: (r: R) => Either<L, T>): Either<L, T>;
 
   /**
    * Transforms the left value contained in this `Either` instance into another `Either` instance.
@@ -163,6 +164,32 @@ abstract class Either<L, R> implements Monad<R>, Futurizable<R>, Foldable<R, L> 
    * const result = Either.left('error').onLeft(value => console.error(value)); // prints 'error'
    */
   abstract onLeft(action: (l: L) => void): Either<L, R>;
+
+  /**
+   * Transforms the right value contained in this `Either` instance into another `Either` instance.
+   * @template L The type of the left value.
+   * @template R The type of the right value.
+   * @template T The type of the transformed value.
+   * @param {(r: R) => Either<L, T>} transform The transformation function.
+   * @returns {Either<L, T>} The result of the transformation function.
+   * @example
+   * const result = Either.right(5).andThen(value => Either.right(value * 2));
+   * result.fold({ ifRight: console.log, ifLeft: error => console.error(error.message) }); // 10
+   */
+  abstract andThen<T>(transform: (value: R) => Either<L, T>): Either<L, T>;
+
+  /**
+   * Transforms the left value contained in this `Either` instance into another `Either` instance.
+   * @template L The type of the left value.
+   * @template T The type of the transformed value.
+   * @template R The type of the right value.
+   * @param {(l: L) => Either<T, R>} transform The transformation function.
+   * @returns {Either<T, R>} The result of the transformation function.
+   * @example
+   * const result = Either.left('error').orElse(value => Either.left(`Error: ${value}`));
+   * result.fold({ ifRight: console.log, ifLeft: error => console.error(error.message) }); // Error: Error: error
+   */
+  abstract orElse<T>(transform: (value: L) => Either<T, R>): Either<T, R>;
 
   /**
    * Unwraps the value contained in this `Either` instance by applying the appropriate handler for both Left and Right cases.
@@ -228,7 +255,7 @@ class Left<L, R> extends Either<L, R> {
     return new Left(this.value);
   }
 
-  mapLeft<T>(transform: (l: L) => T): Either<T, never> {
+  mapLeft<T>(transform: (l: L) => T): Either<T, R> {
     return new Left(transform(this.value));
   }
 
@@ -236,11 +263,11 @@ class Left<L, R> extends Either<L, R> {
     return new Left(this.value);
   }
 
-  flatMapLeft<T>(transform: (l: L) => Either<T, never>): Either<T, never> {
+  flatMapLeft<T>(transform: (l: L) => Either<T, R>): Either<T, R> {
     return transform(this.value);
   }
 
-  recover<T>(transform: (l: L) => Either<T, never>): Either<T, never> {
+  recover<T>(transform: (l: L) => Either<T, R>): Either<T, R> {
     return transform(this.value);
   }
 
@@ -253,19 +280,27 @@ class Left<L, R> extends Either<L, R> {
     return this;
   }
 
+  andThen<T>(_: (_: R) => Either<L, T>): Either<L, T> {
+    return new Left(this.value);
+  }
+
+  orElse<T>(transform: (value: L) => Either<T, R>): Either<T, R> {
+    return transform(this.value);
+  }
+
   fold<T>(folding: FoldingEither<R, L, T>): T {
     return folding.ifLeft(this.value);
   }
 
-  isLeft(): this is Left<L, never> {
+  isLeft(): this is Left<L, R> {
     return true;
   }
 
-  isRight(): this is Right<L, never> {
+  isRight(): this is Right<L, R> {
     return false;
   }
 
-  toFuture(): Future<never> {
+  toFuture<R>(): Future<R> {
     return Future.of(() => Promise.reject(new Error(this.value?.toString() ?? 'Unknown error')));
   }
 }
@@ -284,7 +319,7 @@ class Right<L, R> extends Either<L, R> {
     super();
   }
 
-  map<T>(transform: (r: R) => T): Either<never, T> {
+  map<T>(transform: (r: R) => T): Either<L, T> {
     return new Right(transform(this.value));
   }
 
@@ -292,7 +327,7 @@ class Right<L, R> extends Either<L, R> {
     return new Right(this.value);
   }
 
-  flatMap<T>(transform: (r: R) => Either<never, T>): Either<never, T> {
+  flatMap<T>(transform: (r: R) => Either<L, T>): Either<L, T> {
     return transform(this.value);
   }
 
@@ -313,15 +348,23 @@ class Right<L, R> extends Either<L, R> {
     return this;
   }
 
+  andThen<T>(f: (value: R) => Either<L, T>): Either<L, T> {
+    return f(this.value);
+  }
+
+  orElse<T>(f: (value: L) => Either<T, R>): Either<T, R> {
+    return new Right(this.value);
+  }
+
   fold<T>(folding: FoldingEither<R, L, T>): T {
     return folding.ifRight(this.value);
   }
 
-  isLeft(): this is Left<never, R> {
+  isLeft(): this is Left<L, R> {
     return false;
   }
 
-  isRight(): this is Right<never, R> {
+  isRight(): this is Right<L, R> {
     return true;
   }
 

@@ -2,7 +2,7 @@ import { Nullable, Present } from '../types';
 import { Monad } from '../monad';
 import { Futurizable } from '../futurizable';
 import { Future } from '../future';
-import { Foldable, Folding } from '../fold';
+import { Folding, Railway } from '../railway';
 
 type FoldingOption<T, U> = Folding<'Option', T, undefined, U>;
 
@@ -10,7 +10,7 @@ type FoldingOption<T, U> = Folding<'Option', T, undefined, U>;
  * Abstract class representing an optional value.
  * @template T The type of the value.
  */
-abstract class Option<T> implements Monad<T>, Futurizable<T>, Foldable<T, undefined> {
+abstract class Option<T> implements Monad<T>, Futurizable<T>, Railway<T, undefined> {
   /**
    * Creates an `Option` instance from a nullable value.
    * @template T The type of the value.
@@ -57,14 +57,14 @@ abstract class Option<T> implements Monad<T>, Futurizable<T>, Foldable<T, undefi
   /**
    * Creates an `Option` instance from a `Foldable` instance.
    * @template T The type of the value.
-   * @param {Foldable<T, unknown>} foldable The foldable instance.
+   * @param {Railway<T, unknown>} foldable The foldable instance.
    * @returns {Option<T>} A `Some` instance if the foldable contains a value, otherwise a `None` instance.
    * @example
    * const either = Either.right(5);
    * const option = Option.from(either);
    * option.fold({ ifSome: console.log, ifNone: () => console.log('none') }); // 5
    */
-  static from<T>(foldable: Foldable<T, unknown>): Option<T> {
+  static from<T>(foldable: Railway<T, unknown>): Option<T> {
     return foldable.fold<Option<T>>({
       ifSome: (value: T) => Option.of(value),
       ifNone: () => Option.none(),
@@ -143,6 +143,29 @@ abstract class Option<T> implements Monad<T>, Futurizable<T>, Foldable<T, undefi
    * const result = Option.none().onNone(() => console.log('none')); // none
    */
   abstract onNone(action: () => void): Option<T>;
+
+  /**
+   * Transforms a `Some` into another `Option` instance.
+   * @template T The type of the value.
+   * @template U The type of the transformed value.
+   * @param {(value: T) => Option<U>} transform The transformation function.
+   * @returns {Option<U>} The result of the transformation function.
+   * @example
+   * const some = Option.of(5).andThen(value => Option.of(value * 2));
+   * some.fold({ ifSome: console.log, ifNone: () => console.log('none') }); // 10
+   */
+  abstract andThen<U>(transform: (value: T) => Option<U>): Option<U>;
+
+  /**
+   * Transforms a `None` into another `Option` instance.
+   * @template T The type of the value.
+   * @param {(value: undefined) => Option<T>} transform The transformation function.
+   * @returns {Option<T>} The result of the transformation function.
+   * @example
+   * const none = Option.of<number>(undefined).orElse(value => Option.of(5));
+   * none.fold({ ifSome: console.log, ifNone: () => console.log('none') }); // 5
+   */
+  abstract orElse(transform: (value: undefined) => Option<T>): Option<T>;
 
   /**
    * Unwraps the value contained in this `Option` instance by applying the appropriate handler for both Some and None cases.
@@ -228,6 +251,14 @@ class Some<T> extends Option<T> {
     return this;
   }
 
+  andThen<U>(transform: (value: T) => Option<U>): Option<U> {
+    return transform(this.value);
+  }
+
+  orElse(_: (value: undefined) => Option<T>): Option<T> {
+    return new Some(this.value);
+  }
+
   fold<U>(folding: FoldingOption<T, U>): U {
     return folding.ifSome(this.value);
   }
@@ -273,6 +304,13 @@ class None<T> extends Option<T> {
   onNone(action: () => void): Option<T> {
     action();
     return this;
+  }
+
+  andThen<U>(_: (value: T) => Option<U>): Option<U> {
+    return new None();
+  }
+  orElse<T>(transform: (value: undefined) => Option<T>): Option<T> {
+    return transform(undefined);
   }
 
   fold<U>(folding: FoldingOption<T, U>): U {

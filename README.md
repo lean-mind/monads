@@ -12,6 +12,7 @@ This is a set of implementations of monads in TypeScript with OOP perspective.
       * [Mapping over an Either](#mapping-over-an-either)
         * [Using `flatMap` and `flatMapLeft`](#using-flatmap-and-flatmapleft)
         * [Using `map` and `mapLeft`](#using-map-and-mapleft)
+      * [Using Railway Pattern Methods](#using-railway-pattern-methods)
       * [Recovering from a Left value](#recovering-from-a-left-value)
       * [Running side effects](#running-side-effects)
       * [Folding an Either](#folding-an-either)
@@ -21,6 +22,7 @@ This is a set of implementations of monads in TypeScript with OOP perspective.
       * [Asynchronous Operations (AsyncEither)](#asynchronous-operations-asynceither)
         * [Creating an AsyncEither](#creating-an-asynceither)
         * [Mapping over an AsyncEither](#mapping-over-an-asynceither)
+        * [Using Railway Pattern Methods with AsyncEither](#using-railway-pattern-methods-with-asynceither)
         * [Running side effects](#running-side-effects-1)
         * [Folding an AsyncEither](#folding-an-asynceither)
         * [Working with Promises](#working-with-promises)
@@ -119,8 +121,6 @@ transform the value inside a `Left`.
 ```typescript
 import { Either } from '@leanmind/monads';
 
-m
-
 const right = Either.right(42).flatMap(x => Either.right(x + 1)); // Right(43)
 const left = Either.left('Error').flatMapLeft(err => Either.left(`New ${err}`)); // Left('New Error')
 ```
@@ -132,6 +132,32 @@ import { Either } from '@leanmind/monads';
 
 const right = Either.right(42).map(x => x + 1); // Right(43)
 const left = Either.left('Error').mapLeft(err => `New ${err}`); // Left('New Error')
+```
+
+#### Using Railway Pattern Methods
+
+You can use `andThen` and `orElse` methods which follow the Railway-oriented programming pattern. These methods are semantically equivalent to `flatMap` and `flatMapLeft` but offer more readable syntax for error handling flows.
+
+```typescript
+import { Either } from '@leanmind/monads';
+
+// Using andThen to chain operations on successful values (Right)
+const right = Either.right(42)
+  .andThen(x => Either.right(x + 1)); // Right(43)
+
+// Using orElse to handle errors (Left)
+const left = Either.left('Error')
+  .orElse(err => Either.left(`Handled: ${err}`)); // Left('Handled: Error')
+
+// Chaining operations with Railway methods
+const result = Either.right(42)
+  .andThen(x => {
+    if (x > 40) {
+      return Either.right(x + 1);
+    }
+    return Either.left('Value too small');
+  })
+  .orElse(err => Either.left(`Error: ${err}`)); // Right(43)
 ```
 
 #### Recovering from a Left value
@@ -323,6 +349,57 @@ const asyncMapped = await AsyncEither.fromSync(Either.right(42))
     const result = await someAsyncOperation(x);
     return result * 2;
   }); // AsyncEither<never, number>
+```
+
+##### Using Railway Pattern Methods with AsyncEither
+
+Similar to synchronous Either, AsyncEither also supports Railway-oriented programming with `andThen` and `orElse` methods:
+
+```typescript
+import { AsyncEither, Either } from '@leanmind/monads';
+
+// Using andThen with AsyncEither
+const result = await AsyncEither.fromSync(Either.right(42))
+  .andThen(x => AsyncEither.fromSync(Either.right(x + 1)))
+  .fold({
+    ifRight: x => `Result: ${x}`,
+    ifLeft: err => `Error: ${err}`
+  }); // 'Result: 43'
+
+// Using orElse to handle errors in async processing
+const handleError = await AsyncEither.fromSync(Either.left('Network error'))
+  .orElse(err => AsyncEither.fromSync(Either.right(`Recovered from ${err}`)))
+  .fold({
+    ifRight: x => `Success: ${x}`,
+    ifLeft: err => `Failed: ${err}`
+  }); // 'Success: Recovered from Network error'
+
+// Real-world example with API call
+async function fetchUserData(userId: string) {
+  return AsyncEither.fromPromise(
+    fetch(`https://api.example.com/users/${userId}`),
+    error => `Failed to fetch user: ${error.message}`
+  )
+  .andThen(response => {
+    if (!response.ok) {
+      return AsyncEither.fromSync(Either.left(`HTTP error: ${response.status}`));
+    }
+    return AsyncEither.fromPromise(
+      response.json(),
+      error => `Failed to parse response: ${error.message}`
+    );
+  })
+  .andThen(user => {
+    if (!user.id) {
+      return AsyncEither.fromSync(Either.left('Invalid user data'));
+    }
+    return AsyncEither.fromSync(Either.right(user));
+  })
+  .orElse(error => {
+    console.error(`API error: ${error}`);
+    return AsyncEither.fromSync(Either.left(`Friendly error: Something went wrong`));
+  });
+}
 ```
 
 ##### Running side effects

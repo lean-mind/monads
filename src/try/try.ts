@@ -147,6 +147,18 @@ abstract class Try<T> implements Monad<T>, Futurizable<T>, Railway<T, Error> {
   abstract orElse(transform: (error: Error) => Try<T>): Try<T>;
 
   /**
+   * Combines this `Try` instance with another `Railway` instance.
+   * @template T The type of the value.
+   * @template U The types of the combined value.
+   * @param {Try<unknown>[]} others The other `Try` instances to combine with.
+   * @returns {Try<[T, ...U]>} A new `Try` instance containing the combined values.
+   * @example
+   * const result = Try.execute(() => 5).combineWith([Try.success(10), Try.success(15)]);
+   * result.fold({ ifSuccess: console.log, ifFailure: error => console.error(error.message) }); // [5, 10, 15]
+   */
+  abstract combineWith<U extends unknown[]>(others: Try<unknown>[]): Try<[T, ...U]>;
+
+  /**
    * Unwraps the value contained in this `Try` instance by applying the appropriate handler for both Success and Failure cases.
    * @template T The type of the value.
    * @template U The type of the result.
@@ -255,6 +267,24 @@ class Success<T> extends Try<T> {
     return new Success(this.value);
   }
 
+  combineWith<U extends unknown[]>(others: Try<unknown>[]): Try<[T, ...U]> {
+    type UnwrapResult = { success: boolean; value: unknown | Error };
+    const isUnsuccessful = (result: UnwrapResult): result is { success: false; value: Error } => !result.success;
+    const values: unknown[] = [this.value];
+    for (const other of others) {
+      const result = other.fold<UnwrapResult>({
+        ifSuccess: (val) => ({ success: true, value: val }),
+        ifFailure: (err) => ({ success: false, value: err }),
+      });
+      if (isUnsuccessful(result)) {
+        return Try.failure(result.value);
+      }
+      values.push(result.value);
+    }
+
+    return Try.success(values as [T, ...U]);
+  }
+
   fold<U>(folding: FoldingTry<T, U>): U {
     return folding.ifSuccess(this.value);
   }
@@ -293,11 +323,6 @@ class Failure<T = Error> extends Try<T> {
     super();
   }
 
-  /**
-   * A static instance representing a failure with no error provided.
-   * @type {Failure<never>}
-   */
-
   map(_: (_: never) => never): Try<never> {
     return new Failure(this.error);
   }
@@ -316,11 +341,15 @@ class Failure<T = Error> extends Try<T> {
   }
 
   andThen<U>(_: (value: T) => Try<U>): Try<U> {
-    return new Failure<U>(this.error);
+    return new Failure(this.error);
   }
 
   orElse(transform: (error: Error) => Try<T>): Try<T> {
     return transform(this.error);
+  }
+
+  combineWith<U extends unknown[]>(_: Try<unknown>[]): Try<[T, ...U]> {
+    return new Failure(this.error);
   }
 
   fold<U>(folding: FoldingTry<T, U>): U {

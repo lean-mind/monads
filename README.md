@@ -3,6 +3,7 @@
 This is a set of implementations of monads in TypeScript with OOP perspective.
 
 <!-- TOC -->
+
 * [monads](#monads)
   * [Installation](#installation)
   * [Either Monad](#either-monad)
@@ -35,6 +36,7 @@ This is a set of implementations of monads in TypeScript with OOP perspective.
       * [Mapping over an Option](#mapping-over-an-option)
         * [Using `flatMap`](#using-flatmap)
         * [Using `map`](#using-map)
+      * [Using Railway Pattern Methods](#using-railway-pattern-methods-1)
       * [Running side effects](#running-side-effects-2)
       * [Folding an Option](#folding-an-option)
       * [Checking if an Option is Some or None](#checking-if-an-option-is-some-or-none)
@@ -42,6 +44,7 @@ This is a set of implementations of monads in TypeScript with OOP perspective.
     * [Usage](#usage-2)
       * [Using `map`](#using-map-1)
       * [Using `flatMap`](#using-flatmap-1)
+      * [Using Railway Pattern Methods](#using-railway-pattern-methods-2)
       * [Running side effects](#running-side-effects-3)
       * [Retrieving the value](#retrieving-the-value)
       * [Folding a Try](#folding-a-try)
@@ -60,6 +63,7 @@ This is a set of implementations of monads in TypeScript with OOP perspective.
       * [Mapping over an IO](#mapping-over-an-io)
         * [Using `flatMap`](#using-flatmap-3)
         * [Using `map`](#using-map-3)
+
 <!-- TOC -->
 
 ## Installation
@@ -136,7 +140,8 @@ const left = Either.left('Error').mapLeft(err => `New ${err}`); // Left('New Err
 
 #### Using Railway Pattern Methods
 
-You can use `andThen` and `orElse` methods which follow the Railway-oriented programming pattern. These methods are semantically equivalent to `flatMap` and `flatMapLeft` but offer more readable syntax for error handling flows.
+You can use `andThen` and `orElse` methods which follow the Railway-oriented programming pattern. These methods are
+semantically equivalent to `flatMap` and `flatMapLeft` but offer more readable syntax for error handling flows.
 
 ```typescript
 import { Either } from '@leanmind/monads';
@@ -158,6 +163,85 @@ const result = Either.right(42)
     return Either.left('Value too small');
   })
   .orElse(err => Either.left(`Error: ${err}`)); // Right(43)
+```
+
+You can use `combineWith` to combine multiple Either instances into one that contains a tuple of their values. This is
+useful for collecting multiple validations or operations that could fail.
+
+```typescript
+import { Either } from '@leanmind/monads';
+
+class Name {
+  private constructor(private value: string) {
+  }
+  static of(value: string): Either<string, Name> {
+    return value.length >= 2
+      ? Either.right(new Name(value))
+      : Either.left('Name must be at least 2 characters long');
+  }
+}
+
+class Email {
+  private constructor(private value: string) {
+  }
+  static of(value: string): Either<string, Email> {
+    return value.includes('@')
+      ? Either.right(new Email(value))
+      : Either.left('Email must contain @ symbol');
+  }
+}
+
+class Age {
+  private constructor(private value: number) {
+  }
+  static of(value: number): Either<string, Age> {
+    return value >= 18
+      ? Either.right(new Age(value))
+      : Either.left('Age must be at least 18');
+  }
+}
+
+class Address {
+  private constructor(private value: string) {
+  }
+  static of(value: string): Either<string, Address> {
+    return value.length > 5
+      ? Either.right(new Address(value))
+      : Either.left('Address must be longer than 5 characters');
+  }
+}
+
+// Class that requires all validated fields
+class Account {
+  constructor(
+    public name: Name,
+    public email: Email,
+    public age: Age,
+    public address: Address,
+  ) {}
+}
+
+// Combine all validations and create account if all are successful
+const maybeAccount = Name.of('John')
+  .combineWith<[Email, Age, Address]>([
+    Email.of('john@mail.com'),
+    Age.of(37),
+    Address.of('Main St., 123')
+  ])
+  .map(([name, email, age, address]) => new Account(name, email, age, address));
+
+// Result: Right(Account{...})
+
+// If any validation fails, the result will be Left with the first error
+const failedAge = Name.of('John')
+  .combineWith<[Email, Age, Address]>([
+    Email.of('john@mail.com'),
+    Age.of(16), // This will fail
+    Address.of('Main St., 123'),
+  ])
+  .map(([name, email, age, address]) => new Account(name, email, age, address));
+
+// Result: Left('Age must be at least 18')
 ```
 
 #### Recovering from a Left value
@@ -353,7 +437,8 @@ const asyncMapped = await AsyncEither.fromSync(Either.right(42))
 
 ##### Using Railway Pattern Methods with AsyncEither
 
-Similar to synchronous Either, AsyncEither also supports Railway-oriented programming with `andThen` and `orElse` methods:
+Similar to synchronous Either, AsyncEither also supports Railway-oriented programming with `andThen` and `orElse`
+methods:
 
 ```typescript
 import { AsyncEither, Either } from '@leanmind/monads';
@@ -380,25 +465,25 @@ async function fetchUserData(userId: string) {
     fetch(`https://api.example.com/users/${userId}`),
     error => `Failed to fetch user: ${error.message}`
   )
-  .andThen(response => {
-    if (!response.ok) {
-      return AsyncEither.fromSync(Either.left(`HTTP error: ${response.status}`));
-    }
-    return AsyncEither.fromPromise(
-      response.json(),
-      error => `Failed to parse response: ${error.message}`
-    );
-  })
-  .andThen(user => {
-    if (!user.id) {
-      return AsyncEither.fromSync(Either.left('Invalid user data'));
-    }
-    return AsyncEither.fromSync(Either.right(user));
-  })
-  .orElse(error => {
-    console.error(`API error: ${error}`);
-    return AsyncEither.fromSync(Either.left(`Friendly error: Something went wrong`));
-  });
+    .andThen(response => {
+      if (!response.ok) {
+        return AsyncEither.fromSync(Either.left(`HTTP error: ${response.status}`));
+      }
+      return AsyncEither.fromPromise(
+        response.json(),
+        error => `Failed to parse response: ${error.message}`
+      );
+    })
+    .andThen(user => {
+      if (!user.id) {
+        return AsyncEither.fromSync(Either.left('Invalid user data'));
+      }
+      return AsyncEither.fromSync(Either.right(user));
+    })
+    .orElse(error => {
+      console.error(`API error: ${error}`);
+      return AsyncEither.fromSync(Either.left(`Friendly error: Something went wrong`));
+    });
 }
 ```
 
@@ -571,6 +656,74 @@ const some = Option.of(42).map(x => x + 1); // Some(43)
 const none = Option.of(null).map(x => x + 1); // None
 ```
 
+#### Using Railway Pattern Methods
+
+Option also supports Railway-oriented programming with `andThen` and `orElse` methods, which provide a clean way to
+chain operations:
+
+```typescript
+import { Option } from '@leanmind/monads';
+
+// Using andThen with Option
+const result = Option.of(42)
+  .andThen(x => Option.of(x + 1)); // Some(43)
+
+// Using orElse to provide an alternative for None
+const none = Option.of<number>(null)
+  .orElse(() => Option.of(42)); // Some(42)
+
+// Chaining operations
+const validationResult = Option.of('test@example.com')
+  .andThen(email => {
+    if (email.includes('@')) {
+      return Option.of(email);
+    }
+    return Option.none();
+  })
+  .orElse(() => Option.of('default@example.com'));
+```
+
+You can use `combineWith` to combine multiple Option instances into one that contains a tuple of their values. This is
+useful when you need all values to be present to proceed.
+
+```typescript
+import { Option } from '@leanmind/monads';
+
+// User profile information that may be incomplete
+const username = Option.of('johndoe');
+const email = Option.of('john@example.com');
+const age = Option.of(30);
+const address = Option.of('123 Main St');
+
+// Combine all fields to create a complete profile
+const completeProfile = username
+  .combineWith<[string, number, string]>([email, age, address])
+  .map(([name, mail, years, addr]) => ({
+    username: name,
+    email: mail,
+    age: years,
+    address: addr
+  }));
+
+// If all fields are present: Some({ username: 'johndoe', email: 'john@example.com', age: 30, address: '123 Main St' })
+
+// If any field is missing, the result will be None
+const incompleteProfile = username
+  .combineWith<[string, number, string]>([
+    email,
+    Option.of(undefined), // Missing age
+    address
+  ])
+  .map(([name, mail, years, addr]) => ({
+    username: name,
+    email: mail,
+    age: years,
+    address: addr
+  }));
+
+// Result: None
+```
+
 #### Running side effects
 
 You can use the `onSome` method to run side effects on the value inside a `Some`.
@@ -671,6 +824,73 @@ You can use the `flatMap` method to transform the value inside a `Success` with 
 import { Try } from '@leanmind/monads';
 
 const success = Try.success(42).flatMap(x => Try.success(x + 1)); // Success(43)
+```
+
+#### Using Railway Pattern Methods
+
+Try also supports Railway-oriented programming with `andThen` and `orElse` methods, which provide a clean way to handle
+success and error cases:
+
+```typescript
+import { Try } from '@leanmind/monads';
+
+// Using andThen to chain successful operations
+const result = Try.execute(() => JSON.parse('{"key": "value"}'))
+  .andThen(obj => Try.success(obj.key)); // Success('value')
+
+// Using orElse to recover from failures
+const recoveredResult = Try.execute(() => JSON.parse('invalid json'))
+  .orElse(error => Try.success({ error: error.message })); // Success({ error: '...' })
+
+// Chaining operations
+const parseConfig = Try.execute(() => JSON.parse('{"port": 8080}'))
+  .andThen(config => {
+    if (config.port) {
+      return Try.success(`Server will run on port ${config.port}`);
+    }
+    return Try.failure(new Error('Port configuration missing'));
+  })
+  .orElse(_ => Try.success('Server will run on default port 3000'));
+// Result: Success('Server will run on port 8080')
+```
+
+You can use `combineWith` to combine multiple Try instances into one that contains a tuple of their values. This is
+useful for operations that should all succeed or return the first error:
+
+```typescript
+import { Try } from '@leanmind/monads';
+
+// Database operations that may fail
+const fetchUser = Try.execute(() => ({ id: 1, name: 'John' }));
+const fetchPosts = Try.execute(() => [{ title: 'Hello World' }]);
+const fetchComments = Try.execute(() => [{ text: 'Great post!' }]);
+
+// Combine all operations to get user data with posts and comments
+const userData = fetchUser
+  .combineWith<[Array<{ title: string }>, Array<{ text: string }>]>([fetchPosts, fetchComments])
+  .map(([user, posts, comments]) => ({
+    user,
+    posts,
+    comments,
+    summary: `User ${user.name} has ${posts.length} posts and ${comments.length} comments`
+  }));
+
+// If all operations succeed:
+// Success({ user: { id: 1, name: 'John' }, posts: [{ title: 'Hello World' }], comments: [{ text: 'Great post!' }], summary: 'User John has 1 posts and 1 comments' })
+
+// If any operation fails, the result will contain the first error
+const failingOperation = fetchUser
+  .combineWith<[Array<{ title: string }>, Array<{ text: string }>]>([
+    Try.failure(new Error('Failed to fetch posts')),
+    fetchComments
+  ])
+  .map(([user, posts, comments]) => ({
+    user,
+    posts,
+    comments
+  }));
+
+// Result: Failure(Error('Failed to fetch posts'))
 ```
 
 #### Running side effects
@@ -886,11 +1106,3 @@ const io = IO.of(() => 42).map(x => x + 1);
 
 io.runUnsafe(); // 43
 ```
-
-
-
-
-
-
-
-

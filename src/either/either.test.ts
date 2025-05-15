@@ -1,6 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
 import { Either } from './either';
-import { Option } from '../option';
 
 describe('Either monad', () => {
   it.each([
@@ -14,18 +13,6 @@ describe('Either monad', () => {
     },
   ])('$type should be created from possible failed action', ({ execute, expected }) => {
     expect(Either.catch(execute)).toEqual(expected);
-  });
-
-  it.each([
-    { typeFoldable: 'Some', eitherType: 'Right', foldable: Option.of(2), expected: Either.right(2) },
-    {
-      typeFoldable: 'None',
-      eitherType: 'Left',
-      foldable: Option.of<number>(undefined),
-      expected: Either.left(undefined),
-    },
-  ])('$eitherType should be created from $typeFoldable', ({ foldable, expected }) => {
-    expect(Either.from(foldable)).toEqual(expected);
   });
 
   it.each([

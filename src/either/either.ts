@@ -192,6 +192,19 @@ abstract class Either<L, R> implements Monad<R>, Futurizable<R>, Railway<R, L> {
   abstract orElse<T>(transform: (value: L) => Either<T, R>): Either<T, R>;
 
   /**
+   * Combines this `Either` instance with other `Either` instances.
+   * @template L The type of the left value.
+   * @template R The type of the right value.
+   * @template T The type of the combined values.
+   * @param {Either<L, unknown>[]} others The other `Either` instances to combine with.
+   * @returns {Either<L, [R, ...T]>} A new `Either` instance containing the combined values.
+   * @example
+   * const result = Either.right(5).combineWith([Either.right(10), Either.right(15)]);
+   * result.fold({ ifRight: console.log, ifLeft: error => console.error(error.message) }); // [5, 10, 15]
+   */
+  abstract combineWith<T extends unknown[]>(others: Either<L, unknown>[]): Either<L, [R, ...T]>;
+
+  /**
    * Unwraps the value contained in this `Either` instance by applying the appropriate handler for both Left and Right cases.
    * @template R The type of the right value.
    * @template L The type of the left value.
@@ -288,6 +301,10 @@ class Left<L, R> extends Either<L, R> {
     return transform(this.value);
   }
 
+  combineWith<T extends unknown[]>(_: Either<L, unknown>[]): Either<L, [R, ...T]> {
+    return new Left(this.value);
+  }
+
   fold<T>(folding: FoldingEither<R, L, T>): T {
     return folding.ifLeft(this.value);
   }
@@ -354,6 +371,23 @@ class Right<L, R> extends Either<L, R> {
 
   orElse<T>(f: (value: L) => Either<T, R>): Either<T, R> {
     return new Right(this.value);
+  }
+
+  combineWith<T extends unknown[]>(others: Either<L, unknown>[]): Either<L, [R, ...T]> {
+    type UnwrapResult = { success: boolean; value: unknown | L };
+    const isUnsuccessful = (result: UnwrapResult): result is { success: false; value: L } => !result.success;
+    const values: unknown[] = [this.value];
+    for (const other of others) {
+      const result = other.fold<UnwrapResult>({
+        ifRight: (val) => ({ success: true, value: val }),
+        ifLeft: (err) => ({ success: false, value: err }),
+      });
+      if (isUnsuccessful(result)) {
+        return Either.left(result.value);
+      }
+      values.push(result.value);
+    }
+    return Either.right(values as [R, ...T]);
   }
 
   fold<T>(folding: FoldingEither<R, L, T>): T {

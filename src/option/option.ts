@@ -168,6 +168,19 @@ abstract class Option<T> implements Monad<T>, Futurizable<T>, Railway<T, undefin
   abstract orElse(transform: (value: undefined) => Option<T>): Option<T>;
 
   /**
+   * Combines this `Option` instance with other `Railway` instances.
+   * @template T The type of the value.
+   * @template U The type of the combined value.
+   * @param {Railway<unknown, undefined>[]} others The other `Railway` instances to combine with.
+   * @returns {Option<[T, ...U]>} A new `Option` instance containing the combined values.
+   * @example
+   * const some = Option.of(5);
+   * const result = some.combineWith([Option.of(10), Option.of(15)]);
+   * result.fold({ ifSome: console.log, ifNone: () => console.log('none') }); // [5, 10, 15]
+   */
+  abstract combineWith<U extends unknown[]>(others: Option<unknown>[]): Option<[T, ...U]>;
+
+  /**
    * Unwraps the value contained in this `Option` instance by applying the appropriate handler for both Some and None cases.
    * @template T The type of the value.
    * @template U The type of the result.
@@ -259,6 +272,23 @@ class Some<T> extends Option<T> {
     return new Some(this.value);
   }
 
+  combineWith<U extends unknown[]>(others: Option<unknown>[]): Option<[T, ...U]> {
+    type UnwrapResult = { success: boolean; value?: unknown };
+    const values: unknown[] = [this.value];
+    for (const other of others) {
+      const result = other.fold<UnwrapResult>({
+        ifSome: (val) => ({ success: true, value: val }),
+        ifNone: () => ({ success: false }),
+      });
+      if (!result.success) {
+        return Option.none();
+      }
+      values.push(result.value);
+    }
+
+    return Option.some(values as [T, ...U]);
+  }
+
   fold<U>(folding: FoldingOption<T, U>): U {
     return folding.ifSome(this.value);
   }
@@ -309,8 +339,13 @@ class None<T> extends Option<T> {
   andThen<U>(_: (value: T) => Option<U>): Option<U> {
     return new None();
   }
+
   orElse<T>(transform: (value: undefined) => Option<T>): Option<T> {
     return transform(undefined);
+  }
+
+  combineWith<U extends unknown[]>(_: Option<unknown>[]): Option<[T, ...U]> {
+    return new None();
   }
 
   fold<U>(folding: FoldingOption<T, U>): U {

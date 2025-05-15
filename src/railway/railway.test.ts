@@ -19,6 +19,15 @@ describe('Railway', () => {
     // @ts-expect-error
     expect(railway.orElse(operation)).toEqual(expected);
   });
+
+  it.each(combineWithTestCases)(
+    '$type should handle combineWith operation correctly',
+    ({ railway, others, expected }) => {
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-expect-error
+      expect(railway.combineWith(others)).toEqual(expected);
+    }
+  );
 });
 
 const foldTestCases = [
@@ -153,5 +162,79 @@ const orElseTestCases = [
     railway: Option.of<number>(undefined),
     operation: () => Option.of(2),
     expected: Option.of(2),
+  },
+];
+
+const combineWithTestCases = [
+  {
+    type: 'Either Right with Rights',
+    railway: Either.right<string, number>(2),
+    others: [Either.right<string, string>('test'), Either.right<string, boolean>(true)],
+    expected: Either.right([2, 'test', true]),
+  },
+  {
+    type: 'Either Right with Left',
+    railway: Either.right<string, number>(2),
+    others: [Either.right<string, string>('test'), Either.left<string, boolean>('error')],
+    expected: Either.left('error'),
+  },
+  {
+    type: 'Either Left with others',
+    railway: Either.left<string, number>('initial error'),
+    others: [Either.right<string, string>('test'), Either.right<string, boolean>(true)],
+    expected: Either.left('initial error'),
+  },
+  {
+    type: 'Try Success with Successes',
+    railway: Try.success(2),
+    others: [Try.success('test'), Try.success(true)],
+    expected: Try.success([2, 'test', true]),
+  },
+  {
+    type: 'Try Success with Failure',
+    railway: Try.success(2),
+    others: [Try.success('test'), Try.failure(new Error('error'))],
+    expected: Try.failure(new Error('error')),
+  },
+  {
+    type: 'Try Failure with others',
+    railway: Try.failure<number>(new Error('initial error')),
+    others: [Try.success('test'), Try.success(true)],
+    expected: Try.failure(new Error('initial error')),
+  },
+  {
+    type: 'Option Some with Somes',
+    railway: Option.of(2),
+    others: [Option.of('test'), Option.of(true)],
+    expected: Option.of([2, 'test', true]),
+  },
+  {
+    type: 'Option Some with None',
+    railway: Option.of(2),
+    others: [Option.of('test'), Option.of<boolean>(undefined)],
+    expected: Option.of(undefined),
+  },
+  {
+    type: 'Option None with others',
+    railway: Option.of<number>(undefined),
+    others: [Option.of('test'), Option.of(true)],
+    expected: Option.of(undefined),
+  },
+  {
+    type: 'Empty array of others',
+    railway: Either.right<string, number>(2),
+    others: [],
+    expected: Either.right([2]),
+  },
+  {
+    type: 'Multiple values combined',
+    railway: Either.right<string, number>(1),
+    others: [
+      Either.right<string, number>(2),
+      Either.right<string, number>(3),
+      Either.right<string, number>(4),
+      Either.right<string, number>(5),
+    ],
+    expected: Either.right([1, 2, 3, 4, 5]),
   },
 ];

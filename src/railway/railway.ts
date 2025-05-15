@@ -18,8 +18,9 @@ type Folding<K extends Kind, Acceptable, Unacceptable, T> = {
 
 interface Railway<Acceptable, Unacceptable> {
   andThen<R>(f: (value: Acceptable) => Railway<R, Unacceptable>): Railway<R, Unacceptable>;
-  orElse<R>(f: (value: Unacceptable) => Railway<Unacceptable, R>): Railway<Unacceptable, R>;
+  orElse<R>(f: (value: Unacceptable) => Railway<Acceptable, R>): Railway<Acceptable, R>;
   fold<R>(folding: Folding<Kind, Acceptable, Unacceptable, R>): R;
+  combineWith<T extends unknown[]>(others: Railway<unknown, Unacceptable>[]): Railway<[Acceptable, ...T], Unacceptable>;
 }
 
 export { Railway, Folding };

@@ -1,7 +1,8 @@
 import { Monad } from '../monad';
 import { Future } from '../future';
 import { Futurizable } from '../futurizable';
-import { Folding, Railway } from '../railway';
+import { Railway } from '../railway';
+import { Foldable, Folding } from '../fold';
 
 export type FoldingEither<R, L, T> = Folding<'Either', R, L, T>;
 
@@ -10,7 +11,7 @@ export type FoldingEither<R, L, T> = Folding<'Either', R, L, T>;
  * @template L The type of the left value.
  * @template R The type of the right value.
  */
-abstract class Either<L, R> implements Monad<R>, Futurizable<R>, Railway<R, L> {
+abstract class Either<L, R> implements Monad<R>, Futurizable<R>, Foldable<R, L>, Railway<R, L> {
   /**
    * Creates a `Right` instance.
    * @template L The type of the left value.
@@ -43,14 +44,14 @@ abstract class Either<L, R> implements Monad<R>, Futurizable<R>, Railway<R, L> {
    * Creates an `Either` instance from a `Foldable` instance.
    * @template L The type of the left value.
    * @template R The type of the right value.
-   * @param {Railway<R, L>} other Railway instance.
+   * @param {Foldable<R, L>} other Foldable instance.
    * @returns {Either<L, R>} A `Right` instance if the railway contains a successful value, otherwise a `Left` instance.
    * @example
    * const option = Option.of(5);
    * const either = Either.from(option);
    * either.fold({ ifRight: console.log, ifLeft: error => console.error(error.message) }); // 5
    */
-  static from<L, R>(other: Railway<R, L>): Either<L, R> {
+  static from<L, R>(other: Foldable<R, L>): Either<L, R> {
     const folding = {
       ifRight: (value: R) => Either.right<L, R>(value),
       ifLeft: (value: L) => Either.left<L, R>(value),

@@ -3,7 +3,6 @@
 This is a set of implementations of monads in TypeScript with OOP perspective.
 
 <!-- TOC -->
-
 * [monads](#monads)
   * [Installation](#installation)
   * [Either Monad](#either-monad)
@@ -63,7 +62,6 @@ This is a set of implementations of monads in TypeScript with OOP perspective.
       * [Mapping over an IO](#mapping-over-an-io)
         * [Using `flatMap`](#using-flatmap-3)
         * [Using `map`](#using-map-3)
-
 <!-- TOC -->
 
 ## Installation

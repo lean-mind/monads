@@ -1,7 +1,8 @@
 import { Monad } from '../monad';
 import { Futurizable } from '../futurizable';
 import { Future } from '../future';
-import { Folding, Railway } from '../railway';
+import { Railway } from '../railway';
+import { Foldable, Folding } from '../fold';
 
 type FoldingTry<T, U> = Folding<'Try', T, Error, U>;
 
@@ -56,7 +57,7 @@ abstract class Try<T> implements Monad<T>, Futurizable<T>, Railway<T, Error> {
   /**
    * Creates a `Try` instance from a `Foldable` instance.
    * @template T The type of the value.
-   * @param {Railway<T, unknown>} foldable The foldable instance.
+   * @param {Foldable<T, unknown>} foldable The foldable instance.
    * @returns {Try<T>} A `Success` instance if the foldable contains a value, otherwise a `Failure` instance.
    * @example
    * const some = Option.of(5);
@@ -67,7 +68,7 @@ abstract class Try<T> implements Monad<T>, Futurizable<T>, Railway<T, Error> {
    * const failure = Try.from(none);
    * failure.fold({ ifSuccess: console.log, ifFailure: error => console.error(error.message) }); // Empty value
    */
-  static from<T>(foldable: Railway<T, unknown>): Try<T> {
+  static from<T>(foldable: Foldable<T, unknown>): Try<T> {
     return foldable.fold<Try<T>>({
       ifSuccess: (value: T) => Try.success(value),
       ifFailure: (error: unknown) => Try.failure<T>(error as Error),
@@ -273,8 +274,8 @@ class Success<T> extends Try<T> {
     const values: unknown[] = [this.value];
     for (const other of others) {
       const result = other.fold<UnwrapResult>({
-        ifSuccess: (val) => ({ success: true, value: val }),
-        ifFailure: (err) => ({ success: false, value: err }),
+        ifSuccess: (val: unknown) => ({ success: true, value: val }),
+        ifFailure: (err: Error) => ({ success: false, value: err }),
       });
       if (isUnsuccessful(result)) {
         return Try.failure(result.value);

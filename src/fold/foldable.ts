@@ -20,4 +20,4 @@ interface Foldable<Acceptable, Unacceptable> {
   fold<T>(folding: Folding<Kind, Acceptable, Unacceptable, T>): T;
 }
 
-export { Foldable, Folding };
+export { Foldable, Folding, Kind };

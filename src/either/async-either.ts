@@ -1,7 +1,7 @@
-import { Either } from './either';
+import { Either, FoldingEither } from './either';
 import { Monad } from '../monad';
 import { AsyncRailway } from '../railway';
-import { Folding } from '../fold';
+import { AsyncFoldable, Folding } from '../fold';
 
 /**
  * Class representing an asynchronous computation that may result in one of two possible types.
@@ -9,7 +9,7 @@ import { Folding } from '../fold';
  * @template L The type of the left value (usually an error).
  * @template R The type of the right value (usually a success).
  */
-export class AsyncEither<L, R> implements PromiseLike<Either<L, R>>, Monad<R>, AsyncRailway<R, L> {
+export class AsyncEither<L, R> implements PromiseLike<Either<L, R>>, Monad<R>, AsyncRailway<R, L>, AsyncFoldable<R, L> {
   private readonly promise: Promise<Either<L, R>>;
 
   private constructor(promise: Promise<Either<L, R>>) {
@@ -163,15 +163,15 @@ export class AsyncEither<L, R> implements PromiseLike<Either<L, R>>, Monad<R>, A
   }
 
   /**
-   * Applies the appropriate function from the folding object based on whether the Either resolves to a Left or Right.
+   * Folds the AsyncEither instance into a single value using the provided folding functions.
    * @template L The type of the left value.
    * @template R The type of the right value.
    * @template T The return type of the folding functions.
    * @param {Folding<'Either', R, L, T>} folding The folding object with functions for handling Left and Right cases.
    * @returns {Promise<T>} A promise that resolves to the result of the appropriate folding function.
    */
-  async fold<T>(folding: Folding<'Either', R, L, T>): Promise<T> {
-    const either = await this;
+  async fold<T>(folding: FoldingEither<R, L, T>): Promise<T> {
+    const either = await this.promise;
     return either.fold(folding);
   }
 

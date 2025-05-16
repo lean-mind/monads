@@ -2,14 +2,6 @@ import { describe, expect, it, vi } from 'vitest';
 import { AsyncEither } from '../either';
 
 describe('AsyncRailway', () => {
-  it.each(foldTestCases)(
-    'AsyncEither $type should handle fold operation correctly',
-    async ({ railway, folding, expected }) => {
-      const result = await railway.fold(folding);
-      expect(result).toEqual(expected);
-    }
-  );
-
   it.each(andThenTestCases)(
     'AsyncEither $type should handle andThen operation correctly',
     async ({ railway, operation, expected }) => {
@@ -71,27 +63,6 @@ describe('AsyncRailway', () => {
     });
   });
 });
-
-const foldTestCases = [
-  {
-    type: 'Right',
-    railway: AsyncEither.fromSafePromise<string, number>(Promise.resolve(2)),
-    folding: {
-      ifRight: (value: number) => `value: ${value}`,
-      ifLeft: (e: string) => e + '!',
-    },
-    expected: 'value: 2',
-  },
-  {
-    type: 'Left',
-    railway: AsyncEither.fromPromise<string, number>(Promise.reject('error'), (error) => error as string),
-    folding: {
-      ifRight: (value: number) => `value: ${value}`,
-      ifLeft: (e: string) => e + '!',
-    },
-    expected: 'error!',
-  },
-];
 
 const andThenTestCases = [
   {

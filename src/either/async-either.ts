@@ -1,6 +1,7 @@
 import { Either } from './either';
 import { Monad } from '../monad';
-import { AsyncRailway, Folding } from '../railway';
+import { AsyncRailway } from '../railway';
+import { Folding } from '../fold';
 
 /**
  * Class representing an asynchronous computation that may result in one of two possible types.

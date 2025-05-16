@@ -2,7 +2,8 @@ import { Nullable, Present } from '../types';
 import { Monad } from '../monad';
 import { Futurizable } from '../futurizable';
 import { Future } from '../future';
-import { Folding, Railway } from '../railway';
+import { Railway } from '../railway';
+import { Foldable, Folding } from '../fold';
 
 type FoldingOption<T, U> = Folding<'Option', T, undefined, U>;
 
@@ -10,7 +11,7 @@ type FoldingOption<T, U> = Folding<'Option', T, undefined, U>;
  * Abstract class representing an optional value.
  * @template T The type of the value.
  */
-abstract class Option<T> implements Monad<T>, Futurizable<T>, Railway<T, undefined> {
+abstract class Option<T> implements Monad<T>, Futurizable<T>, Foldable<T, undefined>, Railway<T, undefined> {
   /**
    * Creates an `Option` instance from a nullable value.
    * @template T The type of the value.
@@ -57,14 +58,14 @@ abstract class Option<T> implements Monad<T>, Futurizable<T>, Railway<T, undefin
   /**
    * Creates an `Option` instance from a `Foldable` instance.
    * @template T The type of the value.
-   * @param {Railway<T, unknown>} foldable The foldable instance.
+   * @param {Foldable<T, unknown>} foldable The foldable instance.
    * @returns {Option<T>} A `Some` instance if the foldable contains a value, otherwise a `None` instance.
    * @example
    * const either = Either.right(5);
    * const option = Option.from(either);
    * option.fold({ ifSome: console.log, ifNone: () => console.log('none') }); // 5
    */
-  static from<T>(foldable: Railway<T, unknown>): Option<T> {
+  static from<T>(foldable: Foldable<T, unknown>): Option<T> {
     return foldable.fold<Option<T>>({
       ifSome: (value: T) => Option.of(value),
       ifNone: () => Option.none(),
